@@ -73,6 +73,7 @@ pro organizeFitworthy, field, $
      print, ''
      print, ' >>> NO FIT-WORTHY FILES FOUND !!! <<< '
      print, ''
+
   endelse
   
   cd, '..'
@@ -93,5 +94,8 @@ pro organizeAllFitworthy
   organizefitworthy, 'RXJC1347', /domasked
   organizefitworthy, 'RXJC2248', /domasked
   organizefitworthy, 'ABEL2744', /domasked
+
+  organizefitworthy, 'ABEL0370', /domasked
+;  organizefitworthy, 'MACS0416', /domasked
   
 end

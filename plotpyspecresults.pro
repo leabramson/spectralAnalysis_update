@@ -3,11 +3,13 @@ function grabPyspecResults, filename
   spawn, 'cat '+filename+' | grep "z " > tmpz.dat'
   spawn, 'cat '+filename+' | grep "age" > tmpAge.dat'
   spawn, 'cat '+filename+' | grep "metal" > tmpMetal.dat'
-;  spawn, 'cat '+filename+' | grep "H_ew" > tmpEW.dat'
+  spawn, 'cat '+filename+' | grep "H_ew" > tmpEW.dat'
 ;  if oiii then $
-;  spawn, 'cat '+filename+' | grep "OIII_ew" > tmpEW_OIII.dat'
-  spawn, 'cat '+filename+' | grep "HpsEW" > tmpEW.dat'
-  spawn, 'cat '+filename+' | grep "OIIIpsEW" > tmpEW_OIII.dat'
+  spawn, 'cat '+filename+' | grep "OIII_ew" > tmpEW_OIII.dat'
+;  spawn, 'cat '+filename+' | grep "HpsEW" > tmpEW.dat'
+;  spawn, 'cat '+filename+' | grep "OIIIpsEW" > tmpEW_OIII.dat'
+  spawn, 'cat '+filename+' | grep "ssfr" > tmpSSFR.dat'
+  spawn, 'cat '+filename+' | grep "logmstar" > tmpLMASS.dat'
   
   readcol, 'tmpz.dat'    , zFit    , zMin    , zMax    , f = 'X,F,F,F', $
            /silent, /quick, comment = '#'
@@ -31,7 +33,8 @@ function grabPyspecResults, filename
               AGEFIT: ageFit[0], AGELO: ageMin[0], AGEHI: ageMax[0], $
               METALFIT: metalFit[0], METALLO: metalMin[0], METALHI: metalMax[0], $
               EWFIT: EWFit[0], EWLO: EWmin[0], EWHI: EWmax[0], $
-              EWFIT_OIII: EWFit_OIII[0], EWLO_OIII: EWmin_OIII[0], EWHI_OIII: EWmax_OIII[0]}
+              EWFIT_OIII: EWFit_OIII[0], EWLO_OIII: EWmin_OIII[0], EWHI_OIII: EWmax_OIII[0], $
+              SFRFIT: , SFRLO: , SFRHI: , LMASS: , LMASSLO: , LMASSHI:}
   
   RETURN, savedata
 end

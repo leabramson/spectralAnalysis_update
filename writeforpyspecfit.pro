@@ -70,7 +70,7 @@ pro writeforpyspecfit, inspec, output, $
   mask   = replicate(1, n_elements(lambda))
   
   if CHIP eq 'blue' then begin
-     qui = where(lambda lt 8500 OR lambda gt 1.12d4)  ;;  hard limits from vis. inspection
+     qui = where(lambda lt 8400 OR lambda gt 1.12d4)  ;;  hard limits from vis. inspection
      mask[qui] = 0
 ;     qui = where(lambda gt 1.12d4)
 ;     mask[qui] = 0
@@ -86,7 +86,7 @@ pro writeforpyspecfit, inspec, output, $
 
   if MASKMORE then begin
      mask[where(msk gt 0)] = 0
-     mask[where(spec le 0 OR err le 0)] = 0
+     mask[where(spec le 0 OR err le 0)] = 0     
   endif
      
 ;  plot, lambda, spec, yran = [0,400]

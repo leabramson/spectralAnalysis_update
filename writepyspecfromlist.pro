@@ -74,6 +74,13 @@ pro writepysepecfromlist, inlist
 
 end
 
+pro doAllQuant
+
+  ;; This was used 2017 05 26 for the "final" sample.
+  
+  writepysepecfromlist, 'FITS_FILES_ONLY_1.0_1.8_14.0_21.8_c99.9_pacut0_ALLSRCS_QUANTITATIVE.list'
+
+end
+  
 ;; writepysepecfromlist, 'FITS_FILES_ONLY_1.0_1.8_14.0_21.8_c99.9_pacut0_ALLSRCS_INSPECTED.list'
-;; writepysepecfromlist, 'FITS_FILES_ONLY_1.0_1.8_14.0_21.8_c99.9_pacut0_ALLSRCS_QUANTITATIVE.list'
 ;;  writepysepecfromlist, 'FITS_FILES_ONLY_1.0_1.8_14.0_21.8_c99.9_pacut0_MACS0717_QUANTITATIVE.list'

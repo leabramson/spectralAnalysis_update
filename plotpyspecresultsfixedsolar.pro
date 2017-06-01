@@ -1,45 +1,3 @@
-function grabPyspecResults, filename
-
-  spawn, 'cat '+filename+' | grep "z " > tmpz.dat'
-  spawn, 'cat '+filename+' | grep "age" > tmpAge.dat'
-  spawn, 'cat '+filename+' | grep "metal" > tmpMetal.dat'
-  spawn, 'cat '+filename+' | grep "H_ew" > tmpEW.dat'
-;  if oiii then $
-;  spawn, 'cat '+filename+' | grep "OIII_ew" > tmpEW_OIII.dat'
-;  spawn, 'cat '+filename+' | grep "HpsEW" > tmpEW.dat'
-;  spawn, 'cat '+filename+' | grep "OIIIpsEW" > tmpEW_OIII.dat'
-  
-  readcol, 'tmpz.dat'    , zFit    , zMin    , zMax    , f = 'X,F,F,F', $
-           /silent, /quick, comment = '#'
-  readcol, 'tmpAge.dat'  , ageFit  , ageMin  , ageMax  , f = 'X,F,F,F', $
-           /silent, /quick, comment = '#'
-  readcol, 'tmpMetal.dat', metalFit, metalMin, metalMax, f = 'X,F,F,F', $
-           /silent, /quick, comment = '#'
-  readcol, 'tmpEW.dat'   , EWFit   , EWMin   , EWMax   , f = 'X,F,F,F', $
-           /silent, /quick, comment = '#'
-
-  if file_lines('tmpEW_OIII.dat') gt 0 then $
-     readcol, 'tmpEW_OIII.dat', EWFit_OIII, EWMin_OIII, EWMax_OIII, f = 'X,F,F,F', $
-              /silent, /quick, comment = '#' $
-  else begin
-     EWFit_OIII = !VALUES.F_NaN
-     EWMin_OIII = !VALUES.F_NaN
-     EWMax_OIII = !VALUES.F_NaN
-  endelse
-     
-  savedata = {ZFIT: zFit[0], ZLO: zMin[0], ZHI: zMax[0], $
-              AGEFIT: ageFit[0], AGELO: ageMin[0], AGEHI: ageMax[0], $
-              METALFIT: metalFit[0], METALLO: metalMin[0], METALHI: metalMax[0], $
-              EWFIT: EWFit[0], EWLO: EWmin[0], EWHI: EWmax[0], $
-              EWFIT_OIII: EWFit_OIII[0], EWLO_OIII: EWmin_OIII[0], EWHI_OIII: EWmax_OIII[0]}
-  
-  RETURN, savedata
-end
-
-;;
-;;
-;;
-
 function getlinelist
   
   waves = [3727.092, $
@@ -104,16 +62,16 @@ end
 ;;
 ;;
 
-pro plotPyspecResults, resultsDir, fitsDir, $
-                       DOMASKED = domasked, $
-                       MASS = mass, $
-                       MAG = mag, $
-                       STRETCH = stretch, $
-                       CROP = crop, $
-                       NEG = neg, $
-                       COMBINE = combine, $
-                       COLOR = color, $
-                       TIFF_NAME = tiff_name
+pro plotPyspecResultsFixedSolar, resultsDir, fitsDir, $
+                                 DOMASKED = domasked, $
+                                 MASS = mass, $
+                                 MAG = mag, $
+                                 STRETCH = stretch, $
+                                 CROP = crop, $
+                                 NEG = neg, $
+                                 COMBINE = combine, $
+                                 COLOR = color, $
+                                 TIFF_NAME = tiff_name
 ;                       HEIGHT = height
 
   if NOT keyword_set(DOMASKED) then $
@@ -158,12 +116,18 @@ pro plotPyspecResults, resultsDir, fitsDir, $
   redDat = mrdfits(fitsDir+'/'+objNo+'_'+pa+'_R.fits', 1, /silent)
 
   zs = fltarr(3, nregions)
+  if keyword_set(DOMASKED) then $
+     analyzetofits, resultsDir, objNo+'_'+pa+'_pyspecSummary.fits' $
+  else $
+     analyzetofits, resultsDir, objNo+'_'+pa+'_pyspecSummary.fits', /notmasked
+  tres = mrdfits(objNo+'_'+pa+'_pyspecSummary.fits', 1)
   for ii = 0, nregions - 1 do begin
 
-     prefix = resultsDir+'/'+regions[ii]
-     res = grabPyspecResults(prefix+'.analyze')
+     res = tres[where(tres.REGION eq repstr(regions[ii], '.masked', ''))]
 
-     zs[*,ii] = [res.ZFIT, res.ZLO, res.ZHI]
+     zs[*,ii] = res.Z
+
+     prefix = resultsDir+'/'+regions[ii]
      
      ;; Read G102
      readcol, prefix+'.bestspec0', $
@@ -287,7 +251,7 @@ pro plotPyspecResults, resultsDir, fitsDir, $
 ;  tp2 = 40. / 60. * w - 1
   
   set_plot, 'PS'
-  outputName = objno+'_'+pa+'_withBestfit.eps'
+  outputName = objno+'_'+pa+'_fixedSolar_withBestfit.eps'
   device, filename = outputName, $
           /col, /encap, /decomp, bits_per_pixel = 8, $
           xsize = 9, ysize = 5./7 * 9., /in
@@ -308,15 +272,6 @@ pro plotPyspecResults, resultsDir, fitsDir, $
      cgimage, bdi[xs1:xs2,xs1:xs2], stretch = stretch, /over ;, /neg
   endif else begin     
      cim = read_tiff(tiff_name)
-;     mwrfits, bdi, 'tb.fits', /create
-;     mwrfits, bdi, 'tg.fits', /create
-;     mwrfits, rdi, 'tr.fits', /create
-;     spawn, 'stiff -d > stiff.conf'
-;     spawn, 'stiff tr.fits tg.fits tb.fits -c stiff.conf -OUTFILE_NAME tmp.tiff'
-;     im = read_tiff('tmp.tiff', r, g, b)
-;     tvlct, r, g, b
-;     tv, im
-;     cgloadct, 3
      cgimage, cim[*,xs1:xs2,xs1:xs2], stretch = 2, /over
   endelse
   x = findgen(101) * (2*!pi) / 100.
@@ -510,23 +465,23 @@ pro plotPyspecResults, resultsDir, fitsDir, $
           charsize = 0.7, charthick = 2, linesty = replicate(0,6)
   
   rgrid = bdots / bluDat.RE
-  ageTrend = [outDnRes.AGEFIT, $
-              intDnRes.AGEFIT, $
-              innFlRes.AGEFIT, $
-              intUpRes.AGEFIT, $
-              outUPRes.AGEFIT]
-  ageHi    = 0.434 * ([outDnRes.AGEHI, $
-                       intDnRes.AGEHI, $
-                       innFlRes.AGEHI, $
-                       intUpRes.AGEHI, $
-                       outUPRes.AGEHI] $
+  ageTrend = [outDnRes.AGE[0], $
+              intDnRes.AGE[0], $
+              innFlRes.AGE[0], $
+              intUpRes.AGE[0], $
+              outUPRes.AGE[0]]
+  ageHi    = 0.434 * ([outDnRes.AGE[2], $
+                       intDnRes.AGE[2], $
+                       innFlRes.AGE[2], $
+                       intUpRes.AGE[2], $
+                       outUPRes.AGE[2]] $
                       - ageTrend) / ageTrend
   ageLo    = 0.434 * (ageTrend - $
-                      [outDnRes.AGELO, $
-                       intDnRes.AGELO, $
-                       innFlRes.AGELO, $
-                       intUpRes.AGELO, $
-                       outUPRes.AGELO]) / ageTrend
+                      [outDnRes.AGE[1], $
+                       intDnRes.AGE[1], $
+                       innFlRes.AGE[1], $
+                       intUpRes.AGE[1], $
+                       outUPRes.AGE[1]]) / ageTrend
 
   ageTrend = alog10(ageTrend)
   
@@ -544,61 +499,80 @@ pro plotPyspecResults, resultsDir, fitsDir, $
      mout = (ageTrend[0] / e0^2  + ageTrend[4] / e4^2) / $
             (1. / e0^2 + 1. / e4^2)
 
-;     (ageTrend[0] / mean(abs([ageLo[0], ageHi[0]]-ageTrend[0]))^2  + $
-;             ageTrend[4] / mean(abs([ageLo[4], ageHi[4]]-ageTrend[4]))^2) / $
-;            (1. / mean(abs([ageLo[0], ageHi[0]]-ageTrend[0]))^2 + $
-;             1. / mean(abs([ageLo[4], ageHi[4]]-ageTrend[4]))^2)
-
      ageTrend = [minn, mint, mout]
      ageHi = [minn + ageHi[2], mint+mean([e1,e3]), mout+mean([e0,e4])]
      ageLo = [minn - ageLo[2], mint-mean([e1,e3]), mout-mean([e0,e4])]
-;     ageHi = [ageHi[2], sqrt(1./(1./ageHi[1]^2 + 1./ageHi[3]^2)), sqrt(1./(1./ageHi[0]^2 + 1./ageHi[4]^2))]
-;     ageLo = [ageLo[2], sqrt(1./(1./ageLo[1]^2 + 1./ageLo[3]^2)), sqrt(1./(1./ageLo[0]^2 + 1./ageLo[4]^2))]
      
   endif
   agehiBar    = agehi - ageTrend
   ageloBar    = ageTrend - ageLo
-
-  HewTrend = [outDnRes.H_ew, $
-                intDnRes.HEWFIT, $
-                innFlRes.HEWFIT, $
-                intUpRes.HEWFIT, $
-                outUPRes.HEWFIT]
-  HewHi    = 0.434 * ([outDnRes.HEWHI, $
-                         intDnRes.HEWHI, $
-                         innFlRes.HEWHI, $
-                         intUpRes.HEWHI, $
-                         outUPRes.HEWHI] $
-                        - HewTrend) / HewTrend
-  HewLo    = 0.434 * (HewTrend - $
-                        [outDnRes.HEWLO, $
-                         intDnRes.HEWLO, $
-                         innFlRes.HEWLO, $
-                         intUpRes.HEWLO, $
-                         outUPRes.HEWLO]) / HewTrend
   
-  metalTrend = alog10(metalTrend)
+  sfrTrend = gethasfr([outDnRes.HA_FLUX[0], $      
+                       intDnRes.HA_FLUX[0], $      
+                       innFlRes.HA_FLUX[0], $      
+                       intUpRes.HA_FLUX[0], $      
+                       outUPRes.HA_FLUX[0]], zpick)
+             
+  sfrHi    = gethasfr([outDnRes.HA_FLUX[2], $       
+                        intDnRes.HA_FLUX[2], $      
+                        innFlRes.HA_FLUX[2], $      
+                        intUpRes.HA_FLUX[2], $      
+                        outUPRes.HA_FLUX[2]], zpick)             
 
-  zsun = 0.02
+  sfrLo    = gethasfr([outDnRes.HA_FLUX[1], $       
+                        intDnRes.HA_FLUX[1], $      
+                        innFlRes.HA_FLUX[1], $      
+                        intUpRes.HA_FLUX[1], $      
+                        outUPRes.HA_FLUX[1]], zpick)
+
+  sfrHi    = 1/alog(10) * (sfrhi - sfrtrend) / sfrTrend
+  sfrLo    = 1/alog(10) * (sfrtrend - sfrlo) / sfrTrend
+  sfrErr   = 0.5 * (sfrHi - sfrLo)
+  sfrTrend = alog10(sfrTrend)
+  
+  
+  massTrend = [outDnRes.LMASS[0], $      
+               intDnRes.LMASS[0], $      
+               innFlRes.LMASS[0], $      
+               intUpRes.LMASS[0], $      
+               outUPRes.LMASS[0]]
+
+  massHi    = [outDnRes.LMASS[2], $      
+               intDnRes.LMASS[2], $      
+               innFlRes.LMASS[2], $      
+               intUpRes.LMASS[2], $      
+               outUPRes.LMASS[2]]
+
+  massLo    = [outDnRes.LMASS[1], $      
+               intDnRes.LMASS[1], $      
+               innFlRes.LMASS[1], $      
+               intUpRes.LMASS[1], $      
+               outUPRes.LMASS[1]]
+
+  massErr   = 0.5 * (massHi - massLo)
+  
+  ssfrTrend = sfrTrend - massTrend
+  ssfrErr   = sqrt(sfrErr^2 + massErr^2)
+  
   if combine then begin
 
-     minn = metalTrend[2]
+     q1 = where(res.REGION eq 'INNFL')
+     q2 = where(res.REGION eq 'INTUP')
+     q3 = where(res.REGION eq 'INTDN')
+     q4 = where(res.REGION eq 'OUTUP')
+     q5 = where(res.REGION eq 'OUTDN')
+     
+     
+     minn = ssfrTrend[q1]
+     
+     mint = (ssfrTrend[q2] / ssfrErr[q2]^2  + ssfrTrend[q3] / ssfrErr[q3]^2) / $
+            (1. / ssfrErr[q2]^2 + 1. / ssfrErr[q3]^2)
+     mout = (ssfrTrend[q4] / ssfrErr[q4]^2 + ssfrTrend[q5] / ssfrErr[q5]^2)  / $
+            (1. / ssfrErr[q4]^2 + 1. / ssfrErr[q5]^2)
 
-     e1 = 0.5 * (metalLo[1] + metalHi[1])
-     e3 = 0.5 * (metalLo[3] + metalHi[3])
-     e0 = 0.5 * (metalLo[0] + metalHi[0])
-     e4 = 0.5 * (metalLo[4] + metalHi[4])
-     mint = (metalTrend[1] / e1^2  + metalTrend[3] / e3^2) / $
-            (1. / e1^2 + 1. / e3^2)
-     mout = (metalTrend[0] / e0^2 + metalTrend[4] / e4^2)  / $
-            (1. / e0^2 + 1. / e4^2)
-
-     metalTrend = [minn, mint, mout] - alog10(zsun)
-     metalHi = [minn + metalHi[2], mint+mean([e1,e3]), mout+mean([e0,e4])] - alog10(zsun)
-     metalLo = [minn - metalLo[2], mint-mean([e1,e3]), mout-mean([e0,e4])] - alog10(zsun)
-
-;     metalHi = [metalHi[2], sqrt(1./(1./metalHi[1]^2 + 1./metalHi[3]^2)), sqrt(1./(1./metalHi[0]^2 + 1./metalHi[4]^2))]
-;     metalLo = [metalLo[2], sqrt(1./(1./metalLo[1]^2 + 1./metalLo[3]^2)), sqrt(1./(1./metalLo[0]^2 + 1./metalLo[4]^2))]
+     ssfrTrend = [minn, mint, mout]
+     ssfrHi = [minn + ssfrErr[q1], mint+mean([ssfrErr[q2],ssfrErr[q3]]), mout+mean([ssfrErr[q4],ssfrErr[q5]])]
+     ssfrLo = [minn - ssfrErr[q1], mint-mean([ssfrErr[q2],ssfrErr[q3]]), mout-mean([ssfrErr[q4],ssfrErr[q5]])]
 
      ctrdex = 0
      xr = [-0.25, ceil(max(rgrid))]
@@ -611,8 +585,11 @@ pro plotPyspecResults, resultsDir, fitsDir, $
      scols = ['ff5500'x, '005500'x, 255, '00aa00'x, 'ffa500'x]
 
   endelse
-  metalhiBar    = metalhi - metalTrend
-  metalloBar    = metalTrend - metalLo
+  ssfrhiBar    = ssfrErr
+  ssfrloBar    = ssfrErr
+
+  ssfrLo = ssfrTrend - ssfrErr
+  ssfrHi = ssfrTrend + ssfrErr
   
   plotsym, 0, /fill
   plot, rgrid, ageTrend, /nodat, $
@@ -655,8 +632,8 @@ pro plotPyspecResults, resultsDir, fitsDir, $
            '!18R!X!De!N='+string(hlrObs, f = '(F4.2)')+'"='+string(hlrKpc, f = '(F3.1)')+' kpc'], $
           charsize = 1, charthick = 3
 
-  plot, rgrid, metalTrend, /nodat, $
-        yran = [min(metalTrend)-0.3,max(metalTrend)+0.3], $
+  plot, rgrid, ssfrTrend, /nodat, $
+        yran = [min(ssfrTrend)-0.3,max(ssfrTrend)+0.3], $
 ;        ytitle = 'Age [Gyr]', $
         ytickname = replicate(' ',60), $
         xthick = 4, ythick = 4, charthick = 3, $
@@ -666,34 +643,32 @@ pro plotPyspecResults, resultsDir, fitsDir, $
         charsize = 1, ysty = 8+1, $
         xran = xr, /xsty
   axis, yaxis = 1, yran = !Y.CRANGE, ythick = 4, charsize = 1, $
-        ytitle = 'log !18Z!X [!18Z!X!D'+sunsymbol()+']', $
+        ytitle = 'log !18sSFR!X [yr!e-1!N]', $
         charthick = 3, /ysty
   polyfill, [!X.CRANGE[0], !X.CRANGE[0], !X.CRANGE[1], !X.CRANGE[1]], $
-            [metallo[ctrdex], metalhi[ctrdex], metalhi[ctrdex], metallo[ctrdex]], $
+            [ssfrlo[ctrdex], ssfrhi[ctrdex], ssfrhi[ctrdex], ssfrlo[ctrdex]], $
             col = 'aaaaaa'x
-  oplot, !X.CRANGE, replicate(metalTrend[ctrdex], 2), linesty = 1, col = '777777'x
+  oplot, !X.CRANGE, replicate(ssfrTrend[ctrdex], 2), linesty = 1, col = '777777'x
   polyfill, [rgrid, reverse(rgrid)], $
-            [metalHi, reverse(metalLo)], $
+            [ssfrHi, reverse(ssfrLo)], $
             spacing = 0.05, thick = 1, orien = 45
-  for ii = 0, n_elements(metalTrend) - 1 do begin
+  for ii = 0, n_elements(ssfrTrend) - 1 do begin
      if abs(zplt[ii] - zpick) le (geoZoff < tpixz) then $
         plotsym, 0, /fill $
      else $
         plotsym, 0, thick = 3
-     oploterror, [rgrid[ii]] + off[ii], [metalTrend[ii]], [metalHibar[ii]], $
+     oploterror, [rgrid[ii]] + off[ii], [ssfrTrend[ii]], [ssfrHibar[ii]], $
                  /hibar, psym = 8, symsize = 1, $
                  col = scols[ii], errcol = scols[ii], errthick = 3
-     oploterror, [rgrid[ii]] + off[ii], [metalTrend[ii]], [metalLobar[ii]], $
+     oploterror, [rgrid[ii]] + off[ii], [ssfrTrend[ii]], [ssfrLobar[ii]], $
                  /lobar, psym = 8, symsize = 1, $
                  col = scols[ii], errcol = scols[ii], errthick = 3
      plotsym, 0, thick = 4
-     oplot, [rgrid[ii]] + off[ii], [metalTrend[ii]], symsize = 1.2, psym = 8
-;     oplot, replicate(rgrid[ii], 2), metalTrend[ii] + [0,metalHibar[ii]], col = 'ff00ff'x, thick = 5
-;     oplot, replicate(rgrid[ii], 2), metalTrend[ii] - [0,metalLobar[ii]], col = 'ff00ff'x, thick = 5
+     oplot, [rgrid[ii]] + off[ii], [ssfrTrend[ii]], symsize = 1.2, psym = 8
   endfor
   key =   ['m!DF140W!N='+string(bluDat.MAG, f = '(F5.2)')]
   if keyword_set(MASS) then $
-     key[0]+='; log!18M!X!D*!N='+string(mass, f = '(F4.1)') $
+     key[0]+='; log!18M!X!D*!N='+string(tres[where(tres.REGION eq 'OPTFL')].LMASS[0], f = '(F4.1)') $
   else key = key[0]
   legend, /bottom, /left, box = 0, $ ; pos = [0.17,8.4], /data
           key, $
@@ -703,6 +678,8 @@ pro plotPyspecResults, resultsDir, fitsDir, $
   device, /close
   spawn, 'gv '+outputName+' &'
 
+  stop
+  
   ;;
   ;;
   ;;

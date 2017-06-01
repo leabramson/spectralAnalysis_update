@@ -53,8 +53,8 @@ pro quantInspect, inlist, outlist, $
      ii = 0
      while ii le ntfiles - 1 do begin
 
-        print, ' >>> Now analyzing : '+tfiles[ii]+' (B) and '+tfiles[ii+1]+' (R)'
-        print, ''
+        print, f = '(%" >>> Now analyzing : %s (B) and %s (R)\n")', $
+               tfiles[ii], tfiles[ii+1]        
         
 ;        bdata = mrdfits(tfiles[ii], 1, /silent)
 ;        bsci    = mrdfits(bdata.FILENAME, 'sci', /silent)
@@ -115,26 +115,31 @@ pro quantInspect, inlist, outlist, $
            end
         endcase
 
-        if bc.INN_NE le contam_thresh $
-           AND $
-           rc.INN_NE le contam_thresh $
-        then $
-           keepflag = 1 $
-        else $
-           keepflag = 0
+        if keepflag then begin
+           if bc.INN_NE le contam_thresh $
+              AND $
+              rc.INN_NE le contam_thresh $
+           then $
+              keepflag = 1 $
+           else $
+              keepflag = 0
+        endif
         
         if keepflag then begin
 
+           print, f = '(%"Retaining\n")'
+           
            printf, 2, tfiles[ii], ' ', tfiles[ii+1]
            keep = [keep, dirname+'_'+string(objno, f = '(I05)')]
                      
            printf, 1, field[counter]+' ', idNo[counter], $
                    ra[counter], dec[counter], $
                    z[counter], zq[counter], $
-                   pz[counter], mag[counter], strmid(repstr(tfiles[ii], '.fits', ''), 2, 1, /rev)
+                   pz[counter], mag[counter], $
+                   strmid(repstr(tfiles[ii], '.fits', ''), 2, 1, /rev)
                       
-        endif
-
+        endif else print, f = '(%"Discarding\n")'
+        
         ii+=2
 
      endwhile
@@ -161,8 +166,8 @@ end
 pro doit
   quantInspect, $
      'sourceLists/1.0_1.8_14.0_21.8_c99.9_pacut0_ALLSRCS.list', $
-     '1.0_1.8_14.0_21.8_c99.9_pacut0_ALLSRCS_QUANTITATIVE.list', $
+     '1.0_1.8_14.0_21.8_c99.9_pacut0_ALLSRCS_QUANTITATIVE_3031.list', $
      ZONE = 'OUT', $
      CONTAM_LEVEL = 0.3, $
-     CONTAM_THRESH = 0.3
+     CONTAM_THRESH = 0.31
 end

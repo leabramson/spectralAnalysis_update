@@ -58,5 +58,7 @@ pro organizeAll
   organizeonefield, 'RXJC1347'
   organizeonefield, 'RXJC2248'
   organizeonefield, 'ABEL2744'
+  organizeonefield, 'ABEL0370'
+  organizeonefield, 'MACS0416'
   
 end

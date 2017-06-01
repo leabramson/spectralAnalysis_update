@@ -206,7 +206,7 @@ pro feedtopyspecfit2, field, $
         region = regions[jj]
         
         print, f = '(%"\n >>> >>> RUNNING PYSPECFIT ON %s_%i %s REGION !!! <<<\n ")', $
-               uid[ii], pa[ii], region
+               strmid(uID[ii], 0,5), pa[ii], region
         wait, 1.
         
         ;; Look at what you're doing here
@@ -330,11 +330,11 @@ pro feedtopyspecfit2, field, $
 ;        plotpyspecresults, outname, './',  /domasked     
 
      if ii lt ntorun - 1 then $
-        print, ' >>> >>> ALL DONE FOR '+tid+'_'+tpa+' || MOVING TO NEXT SOURCE ... ' $
+        print, f = '(%"\n >>> >>> ALL DONE FOR %s_%i || MOVING TO NEXT SOURCE ... \n")', $
+               tid, tpa $
      else $
-        print, ' >>> >>> >>> ALL DONE <<< <<< <<< '
-     print, ''
-     print, ''
+        print, f = '(%"\n\n >>> >>> >>> ALL DONE <<< <<< <<< \n\n")'
+
      wait, 2.0
      
   endfor
@@ -343,14 +343,28 @@ pro feedtopyspecfit2, field, $
   
 end
 
-;;
-;;
-;;
-
 pro doGood
 
+;  feedtopyspecfit2, 'ABEL0370', /domasked
+;  feedtopyspecfit2, 'ABEL2744', /domasked
+  feedtopyspecfit2, 'MACS0717', /domasked
+  feedtopyspecfit2, 'MACS0744', /domasked
+  feedtopyspecfit2, 'MACS1149', /domasked
+  feedtopyspecfit2, 'MACS1423', /domasked
+  feedtopyspecfit2, 'MACS2129', /domasked
+  feedtopyspecfit2, 'RXJC1347', /domasked
+  feedtopyspecfit2, 'RXJC2248', /domasked
+
+  feedtopyspecfit2, 'MACS0744', /domasked, sourcelist = '00660_tofit.list'
+end
+
+;;
+;;
+;;
+
+;pro doGood;
+
 ;  FEEDTOPYSPECFIT, 'MACS0717', sourcelist = '01266_tofit.list',  /domasked
-;  FEEDTOPYSPECFIT, 'MACS0717', sourcelist = '01236_tofit.list', /domasked
 
 ;  FEEDTOPYSPECFIT, 'MACS1149', sourcelist = '01931_tofit.list', /domasked, zlock = 1.41 
 ;  FEEDTOPYSPECFIT, 'MACS1423', /domasked
@@ -363,8 +377,9 @@ pro doGood
 ;  feedtopyspecfit, 'ABEL2744', /domasked
 ;  feedtopyspecfit, 'MACS0717', /domasked
 ;  feedtopyspecfit2, 'MACS0744', /domasked
+;  feedtopyspecfit2, 'MACS0717', sourcelist = '01236_tofit.list', /domasked
 ;  feedtopyspecfit2, 'MACS1149', /domasked
-  feedtopyspecfit2, 'MACS1423', /domasked
+;  feedtopyspecfit2, 'MACS1423', /domasked
 ;  feedtopyspecfit2, 'MACS2129', /domasked
 ;  feedtopyspecfit, 'RXJC1347', /domasked
 ;  feedtopyspecfit, 'RXJC2248', /domasked
@@ -375,4 +390,4 @@ pro doGood
 ;  feedtopyspecfit, 'MACS1149', sourcelist = '00753_1_tofit.list'
 ;  feedtopyspecfit2, 'MACS1149', sourcelist = '00900_1_tofit.list'
   
-end
+;end

@@ -76,7 +76,8 @@ pro printphotforpyspec, photfile, $
 
   endfor 
   close, lun
-
+  free_lun, lun
+  
   spawn, 'cat '+output  
   
 end
