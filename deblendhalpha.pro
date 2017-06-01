@@ -1,10 +1,9 @@
 ;; find the average n2/ha ratio given an oiii/hb ratio using the fit
 ;; from Kewley+13.
 
-function deblendhalpha, ha, $
+function deblendhalpha, ha, z, $
                         oiii = oiii, $
-                        hb = hb, $
-                        z = z
+                        hb = hb
 
   logO = alog10(oiii/hb)
 
