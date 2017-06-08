@@ -1,4 +1,3 @@
-;; Point to Takahiro's convolced cluster images given a real
 ;; cluster input name
 function getClusterImData, clusterName
 

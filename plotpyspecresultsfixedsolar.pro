@@ -525,8 +525,8 @@ pro plotPyspecResultsFixedSolar, resultsDir, fitsDir, $
                         intUpRes.HA_FLUX[1], $      
                         outUPRes.HA_FLUX[1]], zpick)
 
-  sfrHi    = 1/alog(10) * (sfrhi - sfrtrend) / sfrTrend
-  sfrLo    = 1/alog(10) * (sfrtrend - sfrlo) / sfrTrend
+  sfrHi    = 1./alog(10) * (sfrhi - sfrtrend) / sfrTrend
+  sfrLo    = 1./alog(10) * (sfrtrend - sfrlo) / sfrTrend
   sfrErr   = 0.5 * (sfrHi - sfrLo)
   sfrTrend = alog10(sfrTrend)
   
@@ -561,7 +561,6 @@ pro plotPyspecResultsFixedSolar, resultsDir, fitsDir, $
      q3 = where(res.REGION eq 'INTDN')
      q4 = where(res.REGION eq 'OUTUP')
      q5 = where(res.REGION eq 'OUTDN')
-     
      
      minn = ssfrTrend[q1]
      

@@ -1,7 +1,8 @@
 ;; Take all of the .analyze files for a single source and convert them
-;; into a more convenient, monolitich FITS tabls
+;; into a more convenient, monolithic FITS table
 
 pro analyzetofits, inprefix, output, $
+                   FITSFILE = fitsfile, $
                    NOTMASKED = notmasked, $
                    SFH = sfh
 
@@ -17,7 +18,7 @@ pro analyzetofits, inprefix, output, $
 
   if NOT keyword_set(SFH) then sfh = 'DelayedExponential'
   
-  readcol, 'tmp.txt', files, f = 'A'
+  readcol, 'tmp.txt', files, f = 'A', /silent
   nregions = n_elements(files)
   
   regions = strarr(nregions)
@@ -28,7 +29,7 @@ pro analyzetofits, inprefix, output, $
      else $
         regions[ii] = repstr(treg, '.masked.analyze', '')
   endfor
-
+  
   if sfh eq 'DelayedExponential' then begin
 
      ; SII6718_ew   z      SII6733_ew
@@ -57,7 +58,12 @@ pro analyzetofits, inprefix, output, $
                  A_V: fltarr(3), $
                  EVIDENCE: 0., $
                  CHI2PHOT: [0.,0.], $
-                 CHI2SPEC: [0.,0.] }
+                 CHI2SPEC: [0.,0.], $
+                 RNORM: 0., $
+                 RE_OBS: 0., $
+                 RE_PHYS: 0., $
+                 FITSFILE: fitsfile, $
+                 TIFF_IMAGE: repstr(fitsfile, '_B.fits', '_rgb.tiff')}
      
   endif else if sfh eq 'LogNormal' then begin
 
@@ -83,7 +89,12 @@ pro analyzetofits, inprefix, output, $
                  A_V: fltarr(3), $
                  EVIDENCE: 0., $
                  CHI2PHOT: [0.,0.], $
-                 CHI2SPEC: [0.,0.]}
+                 CHI2SPEC: [0.,0.], $
+                 RNORM: 0., $
+                 RE_OBS: 0., $
+                 RE_PHYS: 0., $
+                 FITSFILE: fitsfile, $
+                 TIFF_IMAGE: repstr(fitsfile, '_B.fits', '_rgb.tiff')}
      
   endif
 
@@ -132,21 +143,31 @@ pro analyzetofits, inprefix, output, $
            savedata[master].EVIDENCE       = f[0]
         end
         'chi2phot' : begin
-           readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/='
+           readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/=', /silent
            savedata[master].CHI2PHOT       = [chi2,n]
         end
         'chi2spec' : begin
-           readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/='
+           readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/=', /silent
            savedata[master].CHI2SPEC       = [chi2,n]
         end
      endcase
   endfor
+
+  radii = getradii(fitsfile)
   
   for ii = 0, nregions - 1 do begin
+    
      if regions[ii] ne 'OPTFL' then begin
+
+        hit = where(radii.REGION eq regions[ii])
+        savedata[ii].RNORM   = radii[hit].RNORM
+        savedata[ii].RE_OBS  = radii[hit].RE_OBS
+        savedata[ii].RE_PHYS = radii[hit].RE_OBS / $
+                               zang(1., savedata[where(savedata.REGION eq 'OPTFL')].Z[0], /silent)
+        
         for jj = 0, n_elements(params) - 1 do begin
            spawn, 'cat '+files[ii]+' | grep '+params[jj]+' > tmp.txt'
-           readcol, 'tmp.txt', f, flo, fhi, f = 'X,F,F,F'
+           readcol, 'tmp.txt', f, flo, fhi, f = 'X,F,F,F', /silent
            case params[jj] of
               'z'        : begin
                  if n_elements(f) gt 0 then $
@@ -161,8 +182,8 @@ pro analyzetofits, inprefix, output, $
               'H_ew'     : savedata[ii].HA_EW     = [f[0], flo[0], fhi[0]]
               'Ha_flux'  : savedata[ii].HA_FLUX   = [f[0], flo[0], fhi[0]]
               'Hb_flux'  : savedata[ii].HB_FLUX   = [f[0], flo[0], fhi[0]]
-              'freeHa_flux': savedata[ii].HA_FLUX   = [f[0], flo[0], fhi[0]]
-              'freeHb_flux': savedata[ii].HB_FLUX   = [f[0], flo[0], fhi[0]]
+              'freeHa_flux': savedata[ii].HA_FLUX = [f[0], flo[0], fhi[0]]
+              'freeHb_flux': savedata[ii].HB_FLUX = [f[0], flo[0], fhi[0]]
               'OIII_ew'  : savedata[ii].OIII_EW   = [f[0], flo[0], fhi[0]]
               'OIII_flux': savedata[ii].OIII_FLUX = [f[0], flo[0], fhi[0]]
               'age'      : savedata[ii].AGE       = [f[0], flo[0], fhi[0]]
@@ -175,18 +196,18 @@ pro analyzetofits, inprefix, output, $
                  savedata[master].EVIDENCE       = f[0]
               end
               'chi2phot' : begin
-                 readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/='
+                 readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/=', /silent
                  savedata[master].CHI2PHOT       = [chi2,n]
               end
               'chi2spec' : begin
-                 readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/='
+                 readcol, 'tmp.txt', chi2, n, f = 'X,X,F,F', delimiter = '/=', /silent
                  savedata[master].CHI2SPEC       = [chi2,n]
               end
            endcase
         endfor
      endif
   endfor
-
+  
   mwrfits, savedata, output, /create
   
 end

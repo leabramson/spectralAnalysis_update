@@ -29,10 +29,14 @@ pro reconstructhist, dir, region, $
               z, zlo, zhi, f = 'X,F,F,F', /silent
      zcheck = 1
   endif else begin
-     if NOT notmasked then $
-        spawn, 'cat '+dir+'/OPTFL.masked.analyze | grep z > tmpZ.dat' $
+     if sfh eq 'LogNormal' then $
+        tdir = repstr(dir, 'LogNormal', 'Phot') $
      else $
-        spawn, 'cat '+dir+'/OPTFL.analyze | grep z > tmpZ.dat'
+        tdir = dir
+     if NOT notmasked then $
+        spawn, 'cat '+tdir+'/INNFL.masked.analyze | grep z > tmpZ.dat' $
+     else $
+        spawn, 'cat '+tdir+'/INNFL.analyze | grep z > tmpZ.dat'
      readcol, 'tmpZ.dat', $
               z, zlo, zhi, f = 'X,F,F,F', /silent
      zcheck = 0
@@ -48,7 +52,7 @@ pro reconstructhist, dir, region, $
   sfrlo = sfrlo[1]
 
   ;; Set clocks
-  t0 = getage(10)
+  t0 = getage(20)
   t1 = getage(0)
   dt = 0.05
   time = findgen((t1-t0)/dt+1)*dt + t0
@@ -85,14 +89,16 @@ pro reconstructhist, dir, region, $
         ndata = n_elements(age)
         massHist = fltarr(n_elements(time), ndata)
         sfrHist  = fltarr(n_elements(time), ndata)
-        
+        ssfrHist = fltarr(n_elements(time), ndata)
+
         mass = 10.^lmass
         tau  = 10.^ltau/1d9
         age /= 1d9
 
         for ii = 0, ndata - 1 do begin
            t = time - (tobs - age[ii])
-           startdex = value_locate(time, tobs - age[ii])
+           startdex = value_locate(time, tobs - age[ii]) > 0
+           if startdex eq obsdex then startdex -= 1
            sfh = t/tau[ii]^2 * exp(-t/tau[ii])
 
            ;; Normalize the SFH to the inferred SFR
@@ -102,6 +108,9 @@ pro reconstructhist, dir, region, $
            norm = mass[ii] / (tsum(time[startdex:obsdex], sfh[startdex:obsdex]) * 1d9)
            masshist[0:startdex-1,ii] = 0
            masshist[startdex:*,ii] = total(sfh[startdex:*] * norm * dt * 1d9, /cum) 
+
+           ssfrHist[*,ii] = sfrHist[*,ii] / masshist[*,ii]
+           
         endfor
         
      end
@@ -119,6 +128,7 @@ pro reconstructhist, dir, region, $
         ndata = n_elements(t0)
         massHist = fltarr(n_elements(time), ndata)
         sfrHist  = fltarr(n_elements(time), ndata)
+        ssfrHist = fltarr(n_elements(time), ndata)
         
         mass = 10.^lmass
         t0 /= 1d9
@@ -132,13 +142,17 @@ pro reconstructhist, dir, region, $
            ;; Tabulate the mass growth history assuming the modern retention factor is historically accurate
            norm = mass[ii] / (tsum(time[0:obsdex], sfh[0:obsdex]) * 1d9)
            masshist[*,ii] = total(sfh * norm * dt * 1d9, /cum) 
+
+           ssfrHist[*,ii] = sfrHist[*,ii] / masshist[*,ii]
+           
         endfor
         
      end
   endcase
 
-  mgh = fltarr(n_elements(time),3)
-  sfh = fltarr(n_elements(time),3)
+  mgh  = fltarr(n_elements(time), 3)
+  sfh  = fltarr(n_elements(time), 3)
+  ssfh = fltarr(n_elements(time), 3)
   for ii = 0, n_elements(time) - 1 do begin
      tmp = masshist[ii,sort(masshist[ii,*])]
      mgh[ii,*] = [tmp[0.16 * ndata], $
@@ -148,45 +162,23 @@ pro reconstructhist, dir, region, $
      sfh[ii,*] = [tmp[0.16 * ndata], $
                   tmp[0.50 * ndata], $
                   tmp[0.84 * ndata]]
+     tmp = ssfrHist[ii,sort(ssfrHist[ii,*])]
+     ssfh[ii,*] = [tmp[0.16 * ndata], $
+                   tmp[0.50 * ndata], $
+                   tmp[0.84 * ndata]]
   endfor
 
-  savedata = {TIME: time, $
-              REDSHIFT: getredshift(time), $
-              TOBS: tobs, $
-              SFH: sfh, $
-              MGH: mgh}
+  com = $
+     'savedata = {'+$
+     region+'_TIME    : time, '+$
+     region+'_REDSHIFT: getredshift(time), '+$
+     region+'_TOBS    : tobs, '+$
+     region+'_SFH     : sfh, '+$
+     region+'_MGH     : mgh, '+$
+     region+'_SSFH    : ssfh}'
+  void = execute(com)
 
   mwrfits, savedata, output, /create
-  
-;  xxx = [time, reverse(time)]
-;  yyy1 = [sfh[*,0], reverse(sfh[*,2])]
-;  yyy2 = alog10([mgh[*,0], reverse(mgh[*,2])])
-;
-;  !p.multi = [0,2,0]
-;  
-;  plot, time, sfh[*,1], /nodat, $
-;        yran = [0,1.5 * max(sfh[*,1])], $
-;        xtitle = '!18t!X [Gyr]', $
-;        ytitle = '!18SFR!X [M!D'+sunsymbol()+'!N yr!E-1!N]', $
-;        xran = [0,14], /xsty
-;  polyfill, xxx, yyy1 > !Y.CRANGE[0], col = '777777'x
-;  oplot, time, sfh[*,0], linesty = 1
-;  oplot, time, sfh[*,2], linesty = 1
-;  oplot, time, sfh[*,1], col = 255
-;  oplot, replicate(tobs, 2), !Y.CRANGE, col = '00ff00'x
-;
-;  plot, time, alog10(mgh[*,1]), /nodat, $
-;        yran = [-1, 0.5] + median(lmass), $
-;        xtitle = '!18t!X [Gyr]', $
-;        ytitle = 'log !18M!X!D*!N(!18t!X) [M!D'+sunsymbol()+'!N]', $
-;        xran = [0,14], /xsty
-;  polyfill, xxx, yyy2 > !Y.CRANGE[0], col = '777777'x
-;  oplot, time, alog10(mgh[*,0]), linesty = 1
-;  oplot, time, alog10(mgh[*,2]), linesty = 1
-;  oplot, time, alog10(mgh[*,1]), col = 255
-;  oplot, replicate(tobs, 2), !Y.CRANGE, col = '00ff00'x
-;
-;  !p.multi = 0
   
 end
 

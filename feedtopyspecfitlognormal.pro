@@ -208,9 +208,9 @@ end
 pro doGood;
 
 ;  feedtopyspecfitlognormal, 'ABEL0370', /domasked, sourcelist = 'forLognormalFitting.list'
-  feedtopyspecfitlognormal, 'MACS0717', /domasked, sourcelist = 'forLognormalFitting.list'
-  feedtopyspecfitlognormal, 'MACS0744', /domasked, sourcelist = 'forLognormalFitting.list'
-  feedtopyspecfitlognormal, 'MACS1149', /domasked, sourcelist = 'forLognormalFitting.list'
+;  feedtopyspecfitlognormal, 'MACS0717', /domasked, sourcelist = 'forLognormalFitting.list'
+;  feedtopyspecfitlognormal, 'MACS0744', /domasked, sourcelist = 'forLognormalFitting.list'
+;  feedtopyspecfitlognormal, 'MACS1149', /domasked, sourcelist = 'forLognormalFitting.list'
   feedtopyspecfitlognormal, 'MACS1423', /domasked, sourcelist = 'forLognormalFitting.list'
   feedtopyspecfitlognormal, 'MACS2129', /domasked, sourcelist = 'forLognormalFitting.list'
  
