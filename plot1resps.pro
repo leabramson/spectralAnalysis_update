@@ -47,6 +47,7 @@ pro plot1resps, blueRes, redRes, $
      lmin = min(l)
      lmax = max(l)
   endif else begin
+     d = 0.
      lmin = min(lambdaB)
      lmax = max(lambdaR)
   endelse
@@ -61,7 +62,7 @@ pro plot1resps, blueRes, redRes, $
           /col, /encap, /decomp, bits_per_pix = 8, $
           xsize = 7, ysize = 5, /in
   plotsym, 0, /fill
-  plot, lambdaB/(1 + redshift), innSpecB, yran = [0,2. * median(innModelR)], $        
+  plot, lambdaB/(1 + redshift), innSpecB, yran = [0,2. * (median(innModelR)>median(d/1d-18))], $        
         xran = [0.9 * lmin, 1.1 * lmax]/(1 + redshift), /nodat, $
         xtitle = greek('lambda')+'!Drest!N ['+texToIDL('\AA')+']', $
         ytitle = '!18f!X!D'+greek('lambda')+'!N [10!E-18!N erg s!E-1!N cm!E-2!N '+$

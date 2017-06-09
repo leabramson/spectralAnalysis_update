@@ -104,7 +104,7 @@ pro writeforpyspecfit, inspec, output, $
   openw, 1, repstr(output, '.pyspec', '.lsf'), width = 128
   printf, 1, '#CTR_OFFSET LSF'
   for ii = 0, n_elements(lsf) - 1 do $
-     printf, 1, run[ii], lsf[ii]
+     printf, 1, run[ii], newlsf[ii]
   close, 1
 
   print, ''

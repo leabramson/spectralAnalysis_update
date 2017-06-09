@@ -117,12 +117,19 @@ pro feedtopyspecfitlognormal, field, $
 
      basic_regions = ['OPTFL', $
                       'INNFL', $
+                      'INTER', $ ;; Added LEA 2017 06 09         
+                      'OUTER', $ ;; Mean of INTUP/DN and OUTUP/DN
                       'INTUP', $
                       'INTDN', $
                       'OUTUP', $
                       'OUTDN']
      
      regions = basic_regions+msksfx  ;; Spec extractions
+
+     if NOT (file_info(tid+'_'+tpa+'_OUTER.sed')).EXISTS then begin
+        foldspecphot, tid+'_'+tpa, 'INTER' ;; added LEA 2017 06 09                                           
+        foldspecphot, tid+'_'+tpa, 'OUTER' ;; Produces the spec/phot files (masked only) for INTER OUTER fits
+     endif
      
      ;; Setup the output directory
      outname = tid+'_'+tpa+'_pyspecfitLogNormalResults'
@@ -165,8 +172,7 @@ pro feedtopyspecfitlognormal, field, $
         
         ;; Do the fit. For the lognormal, the redshift must be
         ;; determined a priori. Hence, lock them all to the OPTIMAL
-        ;; solution from the DelayedExponential fit.
-
+        ;; solution from the DelayedExponential fit.        
         pyspecfitonetracelgnml, tid, tpa, region, zfit, $
                                 photfile = pfile, $
                                 ncores = 12, outdir = outname+'/'+region
@@ -208,9 +214,9 @@ end
 pro doGood;
 
 ;  feedtopyspecfitlognormal, 'ABEL0370', /domasked, sourcelist = 'forLognormalFitting.list'
-;  feedtopyspecfitlognormal, 'MACS0717', /domasked, sourcelist = 'forLognormalFitting.list'
-;  feedtopyspecfitlognormal, 'MACS0744', /domasked, sourcelist = 'forLognormalFitting.list'
-;  feedtopyspecfitlognormal, 'MACS1149', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS0717', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS0744', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS1149', /domasked, sourcelist = 'forLognormalFitting.list'
   feedtopyspecfitlognormal, 'MACS1423', /domasked, sourcelist = 'forLognormalFitting.list'
   feedtopyspecfitlognormal, 'MACS2129', /domasked, sourcelist = 'forLognormalFitting.list'
  

@@ -75,6 +75,8 @@ pro feedtopyspecfit2, field, $
      spawn, 'ln -s ../plot1resps.pro'
   if NOT (file_info('maketifffromstack.pro')).exists then $
      spawn, 'ln -s ../maketifffromstack.pro'
+  if NOT (file_info('foldspecphot.pro')).exists then $
+     spawn, 'ln -s ../foldspecphot.pro'
   spawn, 'ln -s ../*.sex .'
   spawn, 'ln -s ../*.param .'
   spawn, 'ln -s ../*.conf .'
@@ -185,12 +187,19 @@ pro feedtopyspecfit2, field, $
 
      basic_regions = ['OPTFL', $
                       'INNFL', $
+                      'INTER', $ ;; Added LEA 2017 06 09         
+                      'OUTER', $ ;; Mean of INTUP/DN and OUTUP/DN
                       'INTUP', $
                       'INTDN', $
                       'OUTUP', $
-                      'OUTDN']
+                      'OUTDN']   
      
      regions = basic_regions+msksfx  ;; Spec extractions
+     
+     if NOT (file_info(tid+'_'+tpa+'_OUTER.sed')).EXISTS then begin  
+        foldspecphot, tid+'_'+tpa, 'INTER' ;; added LEA 2017 06 09                                           
+        foldspecphot, tid+'_'+tpa, 'OUTER' ;; Produces the spec/phot files (masked only) for INTER OUTER fits
+     endif
      
      ;; Setup the output directory
      outname = tid+'_'+tpa+'_pyspecfitPhotResults'
@@ -256,10 +265,29 @@ pro feedtopyspecfit2, field, $
 
            endif else begin
 
-              zoffb = getGeoZoff(bdata, basic_regions[jj])
-              zoffr = getGeoZoff(rdata, basic_regions[jj])
+              if basic_regions[jj] ne 'INTER' $
+                 AND $
+                 basic_regions[jj] ne 'OUTER' $
+              then begin
+                 zoffb = getGeoZoff(bdata, basic_regions[jj])
+                 zoffr = getGeoZoff(rdata, basic_regions[jj])
+              endif else if basic_regions[jj] eq 'INTER' then begin
+                 zoffb1 = getGeoZoff(bdata, 'INTUP')
+                 zoffr1 = getGeoZoff(rdata, 'INTUP')
+                 zoffb2 = getGeoZoff(bdata, 'INTDN')
+                 zoffr2 = getGeoZoff(rdata, 'INTDN')
+                 zoffb  = 0.5 * (zoffb1 + zoffb2)
+                 zoffr  = 0.5 * (zoffr1 + zoffr2)
+              endif else if basic_regions[jj] eq 'OUTER' then begin
+                 zoffb1 = getGeoZoff(bdata, 'OUTUP')
+                 zoffr1 = getGeoZoff(rdata, 'OUTUP')
+                 zoffb2 = getGeoZoff(bdata, 'OUTDN')
+                 zoffr2 = getGeoZoff(rdata, 'OUTDN')
+                 zoffb  = 0.5 * (zoffb1 + zoffb2)
+                 zoffr  = 0.5 * (zoffr1 + zoffr2)
+              endif
               zoff = 0.5 * (zoffb + zoffr)
-
+              
               if zoff lt 2*zerr then begin
                  zerr2 = 0
                  zoff  = 0
@@ -349,13 +377,13 @@ pro doGood
 ;  feedtopyspecfit2, 'ABEL2744', /domasked
   feedtopyspecfit2, 'MACS0717', /domasked
   feedtopyspecfit2, 'MACS0744', /domasked
+  feedtopyspecfit2, 'MACS0744', /domasked, sourcelist = '00660_tofit.list'
   feedtopyspecfit2, 'MACS1149', /domasked
   feedtopyspecfit2, 'MACS1423', /domasked
   feedtopyspecfit2, 'MACS2129', /domasked
-  feedtopyspecfit2, 'RXJC1347', /domasked
-  feedtopyspecfit2, 'RXJC2248', /domasked
+;  feedtopyspecfit2, 'RXJC1347', /domasked
+;  feedtopyspecfit2, 'RXJC2248', /domasked
 
-  feedtopyspecfit2, 'MACS0744', /domasked, sourcelist = '00660_tofit.list'
 end
 
 ;;

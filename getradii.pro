@@ -19,7 +19,8 @@ function getradii, infitsn
   hlrObs    = infits.RE * pscale            ;; re in asec
 
 
-  regions = ['INNFL', 'INTUP', 'INTDN', 'OUTUP', 'OUTDN']
+  regions = ['INNFL', 'INTER', 'OUTER', $
+             'INTUP', 'INTDN', 'OUTUP', 'OUTDN']
   
   radii = {FILE: string(0), $
            REGION: string(0), $
@@ -32,9 +33,11 @@ function getradii, infitsn
      radii[ii].REGION = regions[ii]
      case regions[ii] of
         'INNFL': radii[ii].RNORM = 0
-        'INTUP': radii[ii].RNORM = infits.EXTR_INTUP_OFF / infits.RE
+        'INTER': radii[ii].RNORM =  0.5 * (infits.EXTR_INTUP_OFF + infits.EXTR_INTDN_OFF) / infits.RE
+        'OUTER': radii[ii].RNORM =  0.5 * (infits.EXTR_OUTUP_OFF + infits.EXTR_OUTDN_OFF) / infits.RE
+        'INTUP': radii[ii].RNORM =  infits.EXTR_INTUP_OFF / infits.RE
         'INTDN': radii[ii].RNORM = -infits.EXTR_INTDN_OFF / infits.RE
-        'OUTUP': radii[ii].RNORM = infits.EXTR_OUTUP_OFF / infits.RE
+        'OUTUP': radii[ii].RNORM =  infits.EXTR_OUTUP_OFF / infits.RE
         'OUTDN': radii[ii].RNORM = -infits.EXTR_OUTDN_OFF / infits.RE
      endcase
   endfor

@@ -9,7 +9,9 @@ pro makesummary, expDir, lgnDir, $
   if not check.exists then $
      spawn, 'mkdir '+outdir
   
-  regions = ['INNFL', 'INTUP', 'INTDN', 'OUTUP', 'OUTDN', 'OPTFL']
+  regions = ['INNFL', 'INTER', 'OUTER', $
+             'INTUP', 'INTDN', 'OUTUP', 'OUTDN', $
+             'OPTFL']
  
   ;; Read the DelayedExponential Results
   analyzetofits, expdir, $
@@ -19,14 +21,17 @@ pro makesummary, expDir, lgnDir, $
      reconstructhist, expDir, regions[ii], $
                       output = outdir+'/'+sourceID+'_'+regions[ii]+'_exp_recons.fits'
 
-  for ii = 0, n_elements(regions) - 1 do begin
-     regionEvo = mrdfits(outdir+'/'+sourceID+'_'+regions[ii]+'_exp_recons.fits', 1)
-     if ii eq 0 then $
-        regionsEvo = regionEvo $
-     else $
-        regionsEvo = struct_addtags(regionsEvo, regionEvo)
-  endfor
-  mwrfits, regionsEvo, outdir+'/'+sourceID+'_exp_recons.fits', /create
+  combinereconstructions, outdir+'/'+sourceID+'_XXXXX_exp_recons.fits', $
+                             output = outdir+'/'+sourceID+'_exp_recons.fits'
+
+;  for ii = 0, n_elements(regions) - 1 do begin
+;     regionEvo = mrdfits(outdir+'/'+sourceID+'_'+regions[ii]+'_exp_recons.fits', 1)
+;     if ii eq 0 then $
+;        regionsEvo = regionEvo $
+;     else $
+;        regionsEvo = struct_addtags(regionsEvo, regionEvo)
+;  endfor
+;  mwrfits, regionsEvo, outdir+'/'+sourceID+'_exp_recons.fits', /create
   
   ;; Read the LogNormal Results
   check = file_info(lgnDir+'/OUTDN.masked.analyze')
@@ -38,16 +43,19 @@ pro makesummary, expDir, lgnDir, $
         reconstructhist, lgnDir, regions[ii], $
                          output = outdir+'/'+sourceID+'_'+regions[ii]+'_lgn_recons.fits', $
                          sfh = 'LogNormal'
-     
-     master = mrdfits(outdir+'/'+sourceID+'_lgn_bestfit.fits', 1)
-     for ii = 0, n_elements(regions) - 1 do begin
-        regionEvo = mrdfits(outdir+'/'+sourceID+'_'+regions[ii]+'_lgn_recons.fits', 1)
-        if ii eq 0 then $
-           regionsEvo = regionEvo $
-        else $
-           regionsEvo = struct_addtags(regionsEvo, regionEvo)
-     endfor
-     mwrfits, regionsEvo, outdir+'/'+sourceID+'_lgn_recons.fits', /create
+
+     combinereconstructions, outdir+'/'+sourceID+'_XXXXX_lgn_recons.fits', $
+                             output = outdir+'/'+sourceID+'_lgn_recons.fits'
+
+;     master = mrdfits(outdir+'/'+sourceID+'_lgn_bestfit.fits', 1)
+;     for ii = 0, n_elements(regions) - 1 do begin
+;        regionEvo = mrdfits(outdir+'/'+sourceID+'_'+regions[ii]+'_lgn_recons.fits', 1)
+;        if ii eq 0 then $
+;           regionsEvo = regionEvo $
+;        else $
+;           regionsEvo = struct_addtags(regionsEvo, regionEvo)
+;     endfor
+;     mwrfits, regionsEvo, outdir+'/'+sourceID+'_lgn_recons.fits', /create
   endif
   
 end

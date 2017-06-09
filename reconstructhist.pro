@@ -169,13 +169,13 @@ pro reconstructhist, dir, region, $
   endfor
 
   com = $
-     'savedata = {'+$
-     region+'_TIME    : time, '+$
-     region+'_REDSHIFT: getredshift(time), '+$
-     region+'_TOBS    : tobs, '+$
-     region+'_SFH     : sfh, '+$
-     region+'_MGH     : mgh, '+$
-     region+'_SSFH    : ssfh}'
+     'savedata = {REGION: region, '+$
+     'TIME    : time, '+$
+     'REDSHIFT: getredshift(time), '+$
+     'TOBS    : tobs, '+$
+     'SFH     : sfh, '+$
+     'MGH     : mgh, '+$
+     'SSFH    : ssfh}'
   void = execute(com)
 
   mwrfits, savedata, output, /create
@@ -191,8 +191,12 @@ pro test1, dir
 ;  dir = 'MACS1149/00900_1_pyspecfitPhotResults'
 ;  dir = 'ABEL0370/03762_1_pyspecfitPhotResults'
 
-  regions = ['INNFL', 'INTUP', 'INTDN', 'OUTUP', 'OUTDN', 'OPTFL']
-  cols    = [255, '00ff00'x, '00aa00'x, 'ffa500'x, 'ff0000'x, '777777'x]
+  regions = ['INNFL', 'INTER', 'OUTER', $
+             'INTUP', 'INTDN', 'OUTUP', 'OUTDN', $
+             'OPTFL']
+  cols    = [255, '00aa00'x, 'ff5500'x, $
+             '00ff00'x, '00aa00'x, 'ffa500'x, 'ff0000'x, $
+             '777777'x]
 
   reconstructhist, dir, regions[0], $
                    output = 'test_'+regions[0]+'_reconstruct.fits'

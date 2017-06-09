@@ -121,24 +121,24 @@ pro analyzetofits, inprefix, output, $
      spawn, 'cat '+files[master]+' | grep '+params[jj]+' > tmp.txt'
      readcol, 'tmp.txt', f, flo, fhi, f = 'X,F,F,F', /silent
      case params[jj] of
-        'z'        : savedata[master].Z         = [f[0], flo[0], fhi[0]]
-        'logmstar' : savedata[master].LMASS     = [f[0], flo[0], fhi[0]]
-        'sfr'      : savedata[master].SFR       = [f[1], flo[1], fhi[1]] ;; gets logssfr too...
-        'H_ew'     : savedata[master].HA_EW     = [f[0], flo[0], fhi[0]]
-        'freeHa_ew': savedata[master].HA_EW     = [f[0], flo[0], fhi[0]]
-        'freeHb_ew': savedata[master].HB_EW     = [f[0], flo[0], fhi[0]]
-        'Ha_flux'  : savedata[master].HA_FLUX   = [f[0], flo[0], fhi[0]]
-        'Hb_flux'  : savedata[master].HB_FLUX   = [f[0], flo[0], fhi[0]]
+        'z'          : savedata[master].Z         = [f[0], flo[0], fhi[0]]
+        'logmstar'   : savedata[master].LMASS     = [f[0], flo[0], fhi[0]]
+        'sfr'        : savedata[master].SFR       = [f[1], flo[1], fhi[1]] ;; gets logssfr too...
+        'H_ew'       : savedata[master].HA_EW     = [f[0], flo[0], fhi[0]]
+        'freeHa_ew'  : savedata[master].HA_EW     = [f[0], flo[0], fhi[0]]
+        'freeHb_ew'  : savedata[master].HB_EW     = [f[0], flo[0], fhi[0]]
+        'Ha_flux'    : savedata[master].HA_FLUX   = [f[0], flo[0], fhi[0]]
+        'Hb_flux'    : savedata[master].HB_FLUX   = [f[0], flo[0], fhi[0]]
         'freeHa_flux': savedata[master].HA_FLUX   = [f[0], flo[0], fhi[0]]
         'freeHb_flux': savedata[master].HB_FLUX   = [f[0], flo[0], fhi[0]]
-        'OIII_ew'  : savedata[master].OIII_EW   = [f[0], flo[0], fhi[0]]
-        'OIII_flux': savedata[master].OIII_FLUX = [f[0], flo[0], fhi[0]]
-        'age'      : savedata[master].AGE       = [f[0], flo[0], fhi[0]]
-        'ltau'     : savedata[master].TAU       = 10.^[f[0], flo[0], fhi[0]]
-        'A_V'      : savedata[master].A_V       = [f[0], flo[0], fhi[0]]
-        'T0'       : savedata[master].T0        = [f[0], flo[0], fhi[0]]
-        'tau'      : savedata[master].TAU       = [f[0], flo[0], fhi[0]]
-        'evidence' : begin
+        'OIII_ew'    : savedata[master].OIII_EW   = [f[0], flo[0], fhi[0]]
+        'OIII_flux'  : savedata[master].OIII_FLUX = [f[0], flo[0], fhi[0]]
+        'age'        : savedata[master].AGE       = [f[0], flo[0], fhi[0]]
+        'ltau'       : savedata[master].TAU       = 10.^[f[0], flo[0], fhi[0]]
+        'A_V'        : savedata[master].A_V       = [f[0], flo[0], fhi[0]]
+        'T0'         : savedata[master].T0        = [f[0], flo[0], fhi[0]]
+        'tau'        : savedata[master].TAU       = [f[0], flo[0], fhi[0]]
+        'evidence'   : begin
            readcol, 'tmp.txt', f, f = 'X,F', /silent
            savedata[master].EVIDENCE       = f[0]
         end
