@@ -56,18 +56,28 @@ function getarea, fitsfile, z
   outUp = where(extractIm eq  26 + objval, noutup)
   outDn = where(extractIm eq  25 + objval, noutdn)
 
-  npix = [nin, nintup, nintdn, noutup, noutdn]
+  inter = where(extractIm eq 51 + objval OR $    
+                extractIm eq 50 + objval, ninter)
+  outer = where(extractIm eq 26 + objval OR $    
+                extractIm eq 25 + objval, nouter)
+  
+  npix = [nin, ninter, nouter, $
+          nintup, nintdn, noutup, noutdn]
   npix = [npix, total(npix)]
   npix = [npix, total(seg eq objval)]
 
-  regions = ['INNFL', 'INTUP', 'INTDN', 'OUTUP', 'OUTDN', 'TOTAL_COVERED', 'TOTAL_DETECTED']
-  areas = {REGION: string(0), $
-           AREA:   0.}
+  regions = ['INNFL', 'INTER', 'OUTER', $
+             'INTUP', 'INTDN', 'OUTUP', 'OUTDN', $
+             'TOTAL_COVERED', 'TOTAL_DETECTED']
+  areas = {REGION:    string(0), $
+           AREA_PHYS: 0., $
+           AREA_OBS:  0.}
   areas = replicate(areas, n_elements(regions))
 
   for ii = 0, n_elements(regions) - 1 do begin
-     areas[ii].REGION = regions[ii]
-     areas[ii].AREA   = npix[ii] * apix
+     areas[ii].REGION    = regions[ii]
+     areas[ii].AREA_PHYS = npix[ii] * apix
+     areas[ii].AREA_OBS  = npix[ii] * pscale^2
   endfor
   
   RETURN, areas

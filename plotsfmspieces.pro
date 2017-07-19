@@ -3,8 +3,11 @@ pro plotsfmspieces, indata, output
   readcol, indata, dirs, f = 'A'
   nobj = n_elements(dirs)
 
-  sfr   = fltarr(6, nobj, 3)
-  mstel = fltarr(6, nobj, 3)
+  regions  = ['INNER', 'INTER', 'OUTER', 'OPTFL']
+  nregions = n_elements(regions)
+  
+  sfr   = fltarr(nregions, nobj, 3)
+  mstel = fltarr(nregions, nobj, 3)
 
   !P.MULTI = [0,2,ceil(nobj/2.)]
 if 0 then begin
@@ -31,11 +34,11 @@ if 0 then begin
 
         case regions[jj] of
            'INNFL': col = 255      
-           'INTUP': col = '00ff00'x
-           'INTDN': col = '00aa00'x
-           'OUTUP': col = 'ffa500'x
-           'OUTDN': col = 'ff0000'x
-           'OPTFL': col = '777777'x
+           'INTER': col = '00a500'x
+           'OUTER': col = 'ffa500'x
+;           'OUTUP': col = 'ffa500'x
+;           'OUTDN': col = 'ff0000'x
+;           'OPTFL': col = '777777'x
         endcase
 
         if sfr[jj,ii,0] gt !Y.CRANGE[0] then $
@@ -71,15 +74,15 @@ endif
   for ii = 0, nobj - 1 do begin
      analyzetofits, dirs[ii], 'tmp.fits'     
      tdata = mrdfits('tmp.fits', 1)
-     if ii eq 0 then $
-        regions = tdata.REGION
+;     if ii eq 0 then $
+;        regions = tdata.REGION
      tage = tdata.AGE
 
      plot, findgen(10), findgen(4) - 2, /nodat, $
            xran = [9.5,11.5], yran = [6.8,alog10(getage(1)) + 9], /ysty, $
            xtitle = 'log Mstel', ytitle = 'log Age'
      
-     for jj = 0, 5 do begin
+     for jj = 0, nregions - 1 do begin
         age[jj,ii,*] = [tage[0,jj], $
                         tage[1,jj], $
                         tage[2,jj]]

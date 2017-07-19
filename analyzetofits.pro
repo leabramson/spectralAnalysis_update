@@ -62,6 +62,8 @@ pro analyzetofits, inprefix, output, $
                  RNORM: 0., $
                  RE_OBS: 0., $
                  RE_PHYS: 0., $
+                 AREA_OBS: 0., $
+                 AREA_PHYS: 0., $
                  FITSFILE: fitsfile, $
                  TIFF_IMAGE: repstr(fitsfile, '_B.fits', '_rgb.tiff')}
      
@@ -93,6 +95,8 @@ pro analyzetofits, inprefix, output, $
                  RNORM: 0., $
                  RE_OBS: 0., $
                  RE_PHYS: 0., $
+                 AREA_OBS: 0., $
+                 AREA_PHYS: 0., $
                  FITSFILE: fitsfile, $
                  TIFF_IMAGE: repstr(fitsfile, '_B.fits', '_rgb.tiff')}
      
@@ -154,6 +158,7 @@ pro analyzetofits, inprefix, output, $
   endfor
 
   radii = getradii(fitsfile)
+  areas = getarea(fitsfile, savedata[master].Z[0])
   
   for ii = 0, nregions - 1 do begin
     
@@ -164,6 +169,10 @@ pro analyzetofits, inprefix, output, $
         savedata[ii].RE_OBS  = radii[hit].RE_OBS
         savedata[ii].RE_PHYS = radii[hit].RE_OBS / $
                                zang(1., savedata[where(savedata.REGION eq 'OPTFL')].Z[0], /silent)
+
+        hit = where(areas.REGION eq regions[ii])
+        savedata[ii].AREA_OBS  = areas[hit].AREA_OBS
+        savedata[ii].AREA_PHYS = areas[hit].AREA_PHYS
         
         for jj = 0, n_elements(params) - 1 do begin
            spawn, 'cat '+files[ii]+' | grep '+params[jj]+' > tmp.txt'

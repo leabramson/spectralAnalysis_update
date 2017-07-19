@@ -3,25 +3,26 @@ pro plot1evoprof_folded, basicFits, evoFits, output
   obsdat = mrdfits(basicFits, 1)
   evodat = mrdfits(evoFits, 1)
 
-  z    = evodat.INNFL_REDSHIFT
-  time = evodat.INNFL_TIME
-  tobs = evodat.INNFL_TOBS
+  z    = evodat[0].REDSHIFT
+  time = evodat[0].TIME
+  tobs = evodat[0].TOBS
   
   edexes = value_locate(time, tobs+[-1,0,1])
   etot = where(time ge tobs-1 and time le tobs+1)
   nepochs = n_elements(edexes)
   
   regions = ['INNFL', 'INTER', 'OUTER']
-  cols = [255, '007700'x, 'ff5500'x] ;'00aa00'x, 'ffa500'x, 
+  cols = [255, '00a500'x, 'ff5500'x] ;'00aa00'x, 'ffa500'x, 
   nregions = n_elements(regions)
 
-  tdata = obsdat[where(obsdat.REGION ne 'OPTFL')]
+  tdata = obsdat[where(obsdat.REGION eq 'INNFL' $
+                       OR obsdat.REGION eq 'INTER' $
+                       OR obsdat.REGION eq 'OUTER')]
   r = tdata.RNORM
   r = r[sort(r)]
-  r = r[2:*]
 
   cgloadct, 33, ncolors = nepochs, clip = [20,200], /rev
-  
+
   set_plot, 'PS'
   device, filename = output, $
           /col, /encap, /decomp, bits_per_pix = 8, $
@@ -31,94 +32,59 @@ pro plot1evoprof_folded, basicFits, evoFits, output
   xm = 0.01
   plotsym, 0, /fill
   for jj = 0, nregions - 1 do begin
-     case jj of
-        0: begin
-           
-           m  = 0.5 * (evodat.INNFL_MGH[*,1] + evodat.INNFL_MGH[*,1])
-           s  = 0.5 * (evodat.INNFL_SFH[*,1] + evodat.INNFL_SFH[*,1])
-           
-           em = 0.5 * (evodat.INNFL_MGH[*,2] - evodat.INNFL_MGH[*,0]) / m / alog(10)
-           es = 0.5 * (evodat.INNFL_SFH[*,2] - evodat.INNFL_SFH[*,0]) / s / alog(10)
 
-           mgh_inner = m
-           mgh_inner_err = em
-
-           sfh_inner = s
-           sfh_inner_err = es
-           
-        end
-        1: begin
-
-           m = 0.5 * (evodat.INTUP_MGH[*,1] + evodat.INTDN_MGH[*,1])
-           s = 0.5 * (evodat.INTUP_SFH[*,1] + evodat.INTDN_SFH[*,1])
-           
-           em1 = 0.5 * (evodat.INTUP_MGH[*,2] - evodat.INTUP_MGH[*,0]) / m / alog(10)
-           em2 = 0.5 * (evodat.INTDN_MGH[*,2] - evodat.INTDN_MGH[*,0]) / m / alog(10)
-           em  = sqrt(em1^2 + em2^2) / sqrt(2.)
-
-           es1 = 0.5 * (evodat.INTUP_SFH[*,2] - evodat.INTUP_SFH[*,0]) / s / alog(10)
-           es2 = 0.5 * (evodat.INTDN_SFH[*,2] - evodat.INTDN_SFH[*,0]) / s / alog(10)
-           es  = sqrt(es1^2 + es2^2) / sqrt(2.)
-
-           mgh_inter = m
-           mgh_inter_err = em
-
-           sfh_inter = s
-           sfh_inter_err = es
-           
-        end
-        2: begin
-
-           m = 0.5 * (evodat.OUTUP_MGH[*,1] + evodat.OUTDN_MGH[*,1])
-           s = 0.5 * (evodat.OUTUP_SFH[*,1] + evodat.OUTDN_SFH[*,1])
-           
-           em1 = 0.5 * (evodat.OUTUP_MGH[*,2] - evodat.OUTUP_MGH[*,0]) / m / alog(10)
-           em2 = 0.5 * (evodat.OUTDN_MGH[*,2] - evodat.OUTDN_MGH[*,0]) / m / alog(10)
-           em  = sqrt(em1^2 + em2^2) / sqrt(2.)
-
-           es1 = 0.5 * (evodat.OUTUP_SFH[*,2] - evodat.OUTUP_SFH[*,0]) / s / alog(10)
-           es2 = 0.5 * (evodat.OUTDN_SFH[*,2] - evodat.OUTDN_SFH[*,0]) / s / alog(10)
-           es  = sqrt(es1^2 + es2^2) / sqrt(2.)
-
-           mgh_outer = m
-           mgh_outer_err = em
-
-           sfh_outer = s
-           sfh_outer_err = es
-
-        end
-     endcase
-
-     m = alog10(m)
-     s = alog10(s)
+     edat = evodat[where(evodat.REGION eq regions[jj])]
+     bdat = obsdat[where(obsdat.REGION eq regions[jj])]
      
+     m  = alog10(edat.MGH[*,1])
+     em = 0.5/alog(10) * (edat.MGH[*,2] - edat.MGH[*,0]) / 10.^m
+
+     s  = alog10(edat.SFH[*,1])
+     es = 0.5/alog(10) * (edat.SFH[*,2] - edat.SFH[*,0]) / 10.^s
+
      xxx = [(m - em)[etot], reverse((m + em)[etot])]
      yyy = [(s - es)[etot], reverse((s + es)[etot])]
 
-     case jj of
-        0: begin
-           inn_xxx = xxx
-           inn_yyy = yyy
-           inn_m   = m
-           inn_s   = s
-        end
-        1: begin
-           int_xxx = xxx
-           int_yyy = yyy
-           int_m   = m
-           int_s   = s
-        end
-        2: begin
-           out_xxx = xxx
-           out_yyy = yyy
-           out_m   = m
-           out_s   = s
-        end
-     endcase
+     area = alog10(bdat.AREA_PHYS)
+
+     print, area
+     
+     if regions[jj] eq 'INNFL' then begin
+        mgh_inner = m
+        mgh_inner_err = em
+        inn_area = area
+        sfh_inner = s - area
+        sfh_inner_err = es        
+        inn_xxx = xxx - area
+        inn_yyy = yyy - area
+        inn_m   = m - area
+        inn_s   = s - area
+     endif else if regions[jj] eq 'INTER' then begin
+        mgh_inter = m
+        mgh_inter_err = em
+        int_area = area
+        sfh_inter = s - area
+        sfh_inter_err = es
+        int_xxx = xxx - area
+        int_yyy = yyy - area
+        int_m   = m - area
+        int_s   = s - area
+     endif else if regions[jj] eq 'OUTER' then begin
+        mgh_outer = m
+        mgh_outer_err = em
+        out_area = area
+        sfh_outer = s - area
+        sfh_outer_err = es
+        out_xxx = xxx - area
+        out_yyy = yyy - area
+        out_m   = m - area
+        out_s   = s - area
+     endif
   endfor
+  
   plot, inn_m, inn_s, /nodat, $
-        xtitle = 'log !18M!X!D*!N [M!D'+sunsymbol()+'!N]', $
-        ytitle = 'log !18SFR!X [M!D'+sunsymbol()+'!N yr!E-1!N]', $
+        xtitle = 'log '+greek('Sigma')+'!D!18M!X!L*!N [M!D'+sunsymbol()+'!N kpc!e-2!N]', $
+        ytitle = 'log '+greek('Sigma')+'!D!18SFR!X!N [M!D'+sunsymbol()+'!N yr!E-1!N kpc!E-2!N]', $
         charsize = 1.2, charthick = 4, xthick = 3, ythick = 3, $
         pos = [0.075,0.15,0.3,0.9] + [0,0,xm,0], $
         xran = [floor(min([inn_m[edexes],int_m[edexes],out_m[edexes]])), $
@@ -153,8 +119,8 @@ pro plot1evoprof_folded, basicFits, evoFits, output
         col = cgcolor(string(fix(ii))) $
      else  $
         col = 0
-     oplot, alog10(([mgh_inner[edexes[ii]], mgh_inter[edexes[ii]], mgh_outer[edexes[ii]]])), $
-            alog10(([sfh_inner[edexes[ii]], sfh_inter[edexes[ii]], sfh_outer[edexes[ii]]])), $
+     oplot, [inn_m[edexes[ii]], int_m[edexes[ii]], out_m[edexes[ii]]], $
+            [inn_s[edexes[ii]], int_s[edexes[ii]], out_s[edexes[ii]]], $
             thick = 4, linesty = 1, col = col
   endfor
   rp = r
@@ -162,56 +128,30 @@ pro plot1evoprof_folded, basicFits, evoFits, output
           ['!18<r/r!X!de!N!18>!X=0', ' '+string(rp[1], f = '(F4.2)'), ' '+string(rp[2], f = '(F4.2)')], $
           col = cols, linesty = 0, thick = 6, $
           charsize = 1.1, charthick = 3, pspacing = 0.5, spacing = 1.5
-
+  
   xxx = [time[etot], reverse(time[etot])]  
-  for ii = 0, n_elements(regions) - 1 do begin
-     case ii of
-        0: begin
-           s  = evodat.INNFL_SFH[*,1]
-           es = 0.5 * (evodat.INNFL_SFH[*,2] - evodat.INNFL_SFH[*,0]) / s / alog(10)
+  for ii = 0, nregions - 1 do begin
 
-;           q = where(obsdat.REGION eq 'INNFL')
-;           so  = obsdat[q].SFR[0]
-;           eso = 0.5*(obsdat[q].SFR[2] - obsdat[q].SFR[1]) / so / alog(10)           
+     case regions[ii] of
+        'INNFL': begin
+           s  = sfh_inner
+           es = sfh_inner_err
         end
-        1: begin
-           s   = 0.5 * (evodat.INTUP_SFH[*,1] + evodat.INTDN_SFH[*,1])
-           es1 = 0.5 * (evodat.INTUP_SFH[*,2] - evodat.INTUP_SFH[*,0]) / s / alog(10)
-           es2 = 0.5 * (evodat.INTDN_SFH[*,2] - evodat.INTDN_SFH[*,0]) / s / alog(10)
-           es  = sqrt(es1^2 + es2^2) / sqrt(2.)
-
-;           q1  = where(obsdat.REGION eq 'INTUP')
-;           q2  = where(obsdat.REGION eq 'INTDN')
-;           so1 = obsdat[q1].SFR[0]
-;           so2 = obsdat[q2].SFR[0]
-;           eso1 = 0.5*(obsdat[q1].SFR[2] - obsdat[q1].SFR[1]) / so1 / alog(10)
-;           eso2 = 0.5*(obsdat[q2].SFR[2] - obsdat[q2].SFR[1]) / so2 / alog(10)
-;           so = 0.5 * (so1 + so2)
-;           eso = sqrt(eso1^2+eso2^2) / sqrt(2.)
+        'INTER': begin
+           s  = sfh_inter
+           es = sfh_inter_err
         end
-        2: begin
-           s   = 0.5 * (evodat.OUTUP_SFH[*,1] + evodat.OUTDN_SFH[*,1])
-           es1 = 0.5 * (evodat.OUTUP_SFH[*,2] - evodat.OUTUP_SFH[*,0]) / s / alog(10)
-           es2 = 0.5 * (evodat.OUTDN_SFH[*,2] - evodat.OUTDN_SFH[*,0]) / s / alog(10)
-           es  = sqrt(es1^2 + es2^2) / sqrt(2.)
-
-;           q1  = where(obsdat.REGION eq 'OUTUP')
-;           q2  = where(obsdat.REGION eq 'OUTDN')
-;           so1 = obsdat[q1].SFR[0]
-;           so2 = obsdat[q2].SFR[0]
-;           eso1 = 0.5*(obsdat[q1].SFR[2] - obsdat[q1].SFR[1]) / so1 / alog(10)
-;           eso2 = 0.5*(obsdat[q2].SFR[2] - obsdat[q2].SFR[1]) / so2 / alog(10)
-;           so = 0.5 * (so1 + so2)
-;           eso = sqrt(eso1^2+eso2^2) / sqrt(2.)
+        'OUTER': begin
+           s  = sfh_outer
+           es = sfh_outer_err
         end
-     endcase     
-     s = alog10(s)
-
-     if ii eq 0 then begin
-        plot, time, alog10(evodat.INNFL_SFH[*,1]), /nodat, $
+     endcase
+     
+     if regions[ii] eq 'INNFL' then begin
+        plot, time, s, /nodat, $
               yran = !Y.CRANGE, $
               xtitle = '!18t!X [Gyr]', $
-              ytitle = 'log !18SFR!X [M!D'+sunsymbol()+'!N yr!E-1!N]', $
+              ytitle = 'log '+greek('Sigma')+'!D!18SFR!X!N [M!D'+sunsymbol()+'!N yr!E-1!N kpc!E-2!N]', $
               xran = [min(time[edexes])-0.2, max(time[edexes])+0.2], xsty = 8+1, $
               charsize = 1.2, charthick = 4, xthick = 3, ythick = 3, $
               pos = [0.4,0.15,0.6,0.9] + [2*xm,0,3*xm,0], /noer, xtick_get = xticks
@@ -228,73 +168,91 @@ pro plot1evoprof_folded, basicFits, evoFits, output
                /line_fill, thick = 1, spacing = 0.05, orien = ii * 10
      oplot, time, s, thick = 6
      oplot, time, s, col = cols[ii], thick = 3
-;     oploterror, [tobs], [alog10(so)], [eso], psym = 8, symsize = 1, $
-;                 errcol = cols[ii], col = cols[ii], errthick = 4
      
   endfor
   oplot, replicate(tobs, 2), !Y.CRANGE, linesty = 5, thick = 4
   cgtext, tobs-0.15, !Y.CRANGE[0]+0.15, /data, $
           '!18t!X!Dobs!N', orien = 90, charsize = 1.1, charthick = 3
   
-  masses   = fltarr(nregions,nepochs)
-  masserrs = fltarr(nregions,nepochs)
-  tmass    = fltarr(nepochs)
-  tmasserr = fltarr(nepochs)
+  masses   = dblarr(nregions,nepochs)
+  masserrs = dblarr(nregions,nepochs)
+  tmass    = dblarr(nepochs)
+  tmasserr = dblarr(nepochs)
 
+  areas = [inn_area,int_area,out_area]
+  
   xxx = [r, reverse(r)]
   for jj = 0, nregions - 1 do begin
-     case jj of
-        0: begin
-           m  = 0.5 * (evodat.INNFL_MGH[*,1] + evodat.INNFL_MGH[*,1])
-           em = 0.5 * (evodat.INNFL_MGH[*,2] - evodat.INNFL_MGH[*,0]) / m / alog(10)
+
+     case regions[jj] of
+        'INNFL': begin
+           m = inn_m
+           em = mgh_inner_err
         end
-        1: begin
-           m = 0.5 * (evodat.INTUP_MGH[*,1] + evodat.INTDN_MGH[*,1])
-           em1 = 0.5 * (evodat.INTUP_MGH[*,2] - evodat.INTUP_MGH[*,0]) / m / alog(10)
-           em2 = 0.5 * (evodat.INTDN_MGH[*,2] - evodat.INTDN_MGH[*,0]) / m / alog(10)
-           em  = sqrt(em1^2 + em2^2) / sqrt(2.)
+        'INTER':begin
+           m = int_m
+           em = mgh_inter_err
         end
-        2: begin
-           m = 0.5 * (evodat.OUTUP_MGH[*,1] + evodat.OUTDN_MGH[*,1])
-           em1 = 0.5 * (evodat.OUTUP_MGH[*,2] - evodat.OUTUP_MGH[*,0]) / m / alog(10)
-           em2 = 0.5 * (evodat.OUTDN_MGH[*,2] - evodat.OUTDN_MGH[*,0]) / m / alog(10)
-           em  = sqrt(em1^2 + em2^2) / sqrt(2.)
+        'OUTER':begin
+           m = out_m
+           em = mgh_outer_err
         end
      endcase
-
-     masses[jj,*]   = alog10(m[edexes])
+     
+     masses[jj,*]   = m[edexes]
      masserrs[jj,*] = em[edexes]
      
   endfor
 
-  plot, [-0.1,2], [-1,0], /xsty, $
+  anchms = masses[0,1]
+  
+  plot, [-0.1,2], minmax(masses - anchms), /xsty, $
         xtitle = '!18r/r!S!X!De!N!R!Eobs!N', $
-        ytitle = 'log [!18M!X!D*!N(!18r!X,!18t!X)!18/!XM!D*,tot!N(!18t!X)]', $
+        ytitle = 'log '+greek('Sigma')+'!D!18M!X!L*!N(!18r!X,!18t!X)!18/!XM!S!D*,inner!R!Eobs!N', $
         /nodat, $
         charsize = 1.2, charthick = 4, xthick = 3, ythick = 3, $
         pos = [0.7,0.15,0.9,0.9] + [4*xm,0,5*xm,0], /noer
   for ii = 0, nepochs - 1 do begin
-     tmass[ii]    = alog10(total(10.^masses[*,ii]))
-     tmasserr[ii] = sqrt(total(masserrs[*,ii]^2))
+     anchm = anchms;[ii]
+;     ii = ints[jj]
+
+;     tmass[ii]    = alog10(total(10.^masses[*,ii]))
+;     tmasserr[ii] = sqrt(total(masserrs[*,ii]^2))
      
-     yyy = [masses[*,ii] - sqrt(tmasserr[ii]^2 + masserrs[*,ii]^2), $
-            reverse(masses[*,ii] + sqrt(tmasserr[ii]^2 + masserrs[*,ii]^2))] - tmass[ii]
+     ;; From wolfram alpha. need sigma(f=log(x)-log(x+y+z))^2
+     ;; = (df/dx)^2*sigma_x^2
+     ;; = [(y+z) / x(log(10))(x+y+z)]^2 * sigma_x^2 = (sigma_x/x)^2 *
+     ;; [(y+z)/(x+y+z)]^2 = sigma_ln(x)^2 * some stuff
+
+;     em1 = (10.^masserrs[0,ii] - 1); * alog(10) 
+;     em2 = (10.^masserrs[1,ii] - 1); * alog(10) 
+;     em3 = (10.^masserrs[2,ii] - 1); * alog(10) 
+;     em1 = sqrt((em1 * total(10.^masses[1:2,ii]))^2 / total(10.^masses[*,ii])^2)
+;     em2 = sqrt((em2 * total(10.^masses[[0,2],ii]))^2 / total(10.^masses[*,ii])^2)
+;     em3 = sqrt((em3 * total(10.^masses[0:1,ii]))^2 / total(10.^masses[*,ii])^2)
+
+;     err = [em1,em2,em3]
+     
+     err = masserrs[*,ii]  
+     
+     yyy = [masses[*,ii] - err, $
+            reverse(masses[*,ii] + err)] - anchm;- tmass[ii]
      case ii of
         0: early_yyy = yyy
         1: obs_yyy   = yyy
         2: late_yyy  = yyy
      endcase
   endfor
-  polyfill, xxx, early_yyy, col = cgcolor(string(fix(0))), $
+  polyfill, xxx, (early_yyy > !Y.CRANGE[0]) < !Y.CRANGE[1], col = cgcolor(string(fix(0))), $
             /line_fill, thick = 1, spacing = 0.05, orien = 45
-  polyfill, xxx, late_yyy, col = cgcolor(string(fix(2))), $
+  polyfill, xxx, (late_yyy > !Y.CRANGE[0]) < !Y.CRANGE[1], col = cgcolor(string(fix(2))), $
             /line_fill, thick = 1, spacing = 0.05, orien = -45
-  polyfill, xxx, obs_yyy, col = '777777'x
-  oplot, r, masses[*,2] - tmass[2], thick = 7
-  oplot, r, masses[*,2] - tmass[2], thick = 4, col = cgcolor(string(fix(2)))
-  oplot, r, masses[*,0] - tmass[0], thick = 7
-  oplot, r, masses[*,0] - tmass[0], thick = 4, col = cgcolor(string(fix(0)))
-  oplot, r, masses[*,1] - tmass[1], thick = 7
+  polyfill, xxx, (obs_yyy > !Y.CRANGE[0]) < !Y.CRANGE[1], col = '777777'x
+  oplot, r, masses[*,2] - anchm, thick = 7                                   ;tmass[2]s[2]
+  oplot, r, masses[*,2] - anchm, thick = 4, col = cgcolor(string(fix(2)))    ;tmass[2]s[2]
+  oplot, r, masses[*,0] - anchm, thick = 7                                   ;tmass[0]s[0]
+  oplot, r, masses[*,0] - anchm, thick = 4, col = cgcolor(string(fix(0)))    ;tmass[0]s[0]
+  oplot, r, masses[*,1] - anchm, thick = 7                                   ;tmass[1]s[1]
 
   qui = where(obsdat.REGION eq 'INNFL')
   zobs = obsdat[qui].Z[0]
@@ -313,4 +271,12 @@ pro plot1evoprof_folded, basicFits, evoFits, output
   spawn, 'gv '+output+' &'
   
 end
-;plot1evoprof_folded, '00900_1_lgn_bestfit.fits', '00900_1_lgn_recons.fits', '00900_2_evostuff.eps'
+;plot1evoprof_folded, '00900_1_lgn_bestfit.fits','00900_1_lgn_recons.fits', '00900_1_evostuff.eps'
+;plot1evoprof_folded, '00660_2_lgn_bestfit.fits', '00660_2_lgn_recons.fits', '00660_2_evostuff.eps'
+;plot1evoprof_folded, '00451_2_lgn_bestfit.fits',
+;'00451_2_lgn_recons.fits', '00451_2_evostuff.eps'
+
+;plot1evoprof_folded, '01266_1_lgn_bestfit.fits',
+;'01266_1_lgn_recons.fits', '01266_1_evostuff.eps'
+;plot1evoprof_folded, '01931_1_lgn_bestfit.fits', '01931_1_lgn_recons.fits', '01931_1_evostuff.eps'
+;plot1evoprof_folded, '01916_2_lgn_bestfit.fits', '01916_2_lgn_recons.fits', '01916_2_evostuff.eps'

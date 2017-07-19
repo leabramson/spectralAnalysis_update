@@ -13,9 +13,9 @@ pro combinereconstructions, pattern, $
               TIME:     test.TIME, $
               REDSHIFT: test.REDSHIFT, $
               TOBS:     test.TOBS, $
-              SFH:      findgen(niter), $
-              MGH:      findgen(niter), $
-              SSFH:     findgen(niter)}
+              SFH:      findgen(niter,3), $
+              MGH:      findgen(niter,3), $
+              SSFH:     findgen(niter,3)}
   savedata = replicate(savedata, nregions)
   savedata[-1].REGION = regions[-1]
   savedata[-1].SFH    = test.SFH
@@ -23,7 +23,7 @@ pro combinereconstructions, pattern, $
   savedata[-1].SSFH   = test.SSFH
   
   for ii = 0, nregions - 2 do begin
-     test = mrdfits(repstr(pattern, 'XXXX', regions[ii]), 1, /silent)
+     test = mrdfits(repstr(pattern, 'XXXXX', regions[ii]), 1, /silent)
      savedata[ii].REGION = regions[ii]     
      savedata[ii].SFH    = test.SFH
      savedata[ii].MGH    = test.MGH

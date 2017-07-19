@@ -131,4 +131,4 @@ pro foldspecphot, prefix, region, $
   endwhile
   
 end
-;foldspecphot, '00451_2'
+;foldspecphot, '00451_2', 'INTER'

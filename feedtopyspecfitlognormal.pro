@@ -25,14 +25,16 @@ end
 
 pro feedtopyspecfitlognormal, field, $
                               SOURCELIST = SOURCELIST, $
-                              DOMASKED = domasked
+                              DOMASKED = domasked, $
+                              SUFFIX = suffix ;; for second passes
+
+  if NOT keyword_set(SUFFIX) then $
+     suffix = '.masked'
   
   if KEYWORD_SET(DOMASKED) then $
-     msksfx = '.masked' $
+     msksfx = suffix $
   else $
      msksfx = ''
-
-  if NOT keyword_set(ZMAX) then zmax = 3.
   
   ;; Go to the data
   cd, field

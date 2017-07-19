@@ -20,9 +20,9 @@ pro mosaic, inlist, output
 
   set_plot, 'PS'
   if nfiles gt 5 then $
-     xsize = 8 $
+     xsize = 8.5 $
   else $
-     xsize = 8 * 3/5.
+     xsize = 8.5 * nfiles/5.
   ysize = xsize/2.
   
   device, filename = output, $
@@ -33,6 +33,11 @@ pro mosaic, inlist, output
   for ii = 0, nfiles - 1 do begin
      tdata  = mrdfits(files[ii], 1)
      im     = read_tiff(tdata[0].TIFF_IMAGE)
+     tim = im
+     for jj = 0, 2 do $
+        tim[jj,*,*] = rotate(reform(im[jj,*,*]), 7)
+     im = tim
+     
      foo    = mrdfits(tdata[0].FITSFILE, 1)
      foo2   = mrdfits(foo.FILENAME, 'sci', head, /silent)
      pscale = sxpar(head, 'CD2_2')
@@ -133,4 +138,5 @@ pro mosaic, inlist, output
 
 end
 ;mosaic, 'allExpBestfits.list', 'mosaic.eps'
-;mosaic, 'study3_lgn_bestfit.list', 'mosaic3.eps'
+;mosaic, 'study3_lgn_Bestfits.list', 'mosaic3.eps'
+;mosaic, 'study5_lgn_Bestfits.list', 'mosaic4.eps'

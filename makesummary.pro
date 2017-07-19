@@ -75,7 +75,7 @@ pro makeAllsummaries
                   FITSFILE = '/home/labramson/Projects/GLASS/spectralAnalysis/'+$
                   files[ii]+'_B.fits'
 
-     mwrfits, rads, 'resultsSummaries/'+sourceID+'_radii.fits', /create
+;     mwrfits, rads, 'resultsSummaries/'+sourceID+'_radii.fits', /create
   endfor
   
 end

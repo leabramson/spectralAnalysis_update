@@ -135,7 +135,8 @@ pro dolgncovar, dir, output, $
      oplot, chains[3].T0, chains[3].TAU, psym = 3, col = 'ffa500'x
   endelse
   oplot, chains[0].T0, chains[0].TAU, psym = 1
-  stop
+
+  mwrfits, chains, output, /create
   
 end
 
@@ -148,6 +149,9 @@ pro foo
               'resultsSummaries/00900_1_lgn_chains.fits', /folded
 
   dolgncovar, 'MACS2129/00451_2_pyspecfitLogNormalResults', $
-              'resultsSummaries/00451_2_lgn_chains.fits'
+              'resultsSummaries/00451_2_lgn_chains.fits', /folded
+
+  dolgncovar, 'MACS1423/01916_2_pyspecfitLogNormalResults', $
+              'resultsSummaries/01916_2_lgn_chains.fits', /folded
 
 end

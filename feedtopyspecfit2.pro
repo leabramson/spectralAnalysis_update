@@ -1,23 +1,23 @@
-function getGeoZoff, struct, region
-
-  struct = mrdfits(struct, 1, /silent)
-  
-  ctr = struct.LSF_INNER_PARS[1]
-  dl  = struct.LAMBDA[1] - struct.LAMBDA[0]
-  ml  = median(struct.LAMBDA)
-  
-  case REGION of
-     'INTUP': c2 = struct.LSF_INTER_UP_PARS[1]
-     'INTDN': c2 = struct.LSF_INTER_DN_PARS[1]
-     'OUTUP': c2 = struct.LSF_OUTER_UP_PARS[1]
-     'OUTDN': c2 = struct.LSF_OUTER_DN_PARS[1]
-  endcase
-
-  loff = (c2 - ctr) * dl
-  zoff = dl / ml
-  
-  RETURN, zoff
-end
+;function getGeoZoff, struct, region
+;
+;  struct = mrdfits(struct, 1, /silent)
+;  
+;  ctr = struct.LSF_INNER_PARS[1]
+;  dl  = struct.LAMBDA[1] - struct.LAMBDA[0]
+;  ml  = median(struct.LAMBDA)
+;  
+;  case REGION of
+;     'INTUP': c2 = struct.LSF_INTER_UP_PARS[1]
+;     'INTDN': c2 = struct.LSF_INTER_DN_PARS[1]
+;     'OUTUP': c2 = struct.LSF_OUTER_UP_PARS[1]
+;     'OUTDN': c2 = struct.LSF_OUTER_DN_PARS[1]
+;  endcase
+;
+;  loff = (c2 - ctr) * dl
+;  zoff = dl / ml
+;  
+;  RETURN, zoff
+;end
 
 ;;
 ;;
@@ -27,13 +27,17 @@ pro feedtopyspecfit2, field, $
                       SOURCELIST = SOURCELIST, $
                       DOMASKED = domasked, $
                       ZMAX = zmax, $
-                      ZLOCK = zlock ;; for second passes
+                      ZLOCK = zlock, $
+                      SUFFIX = suffix;; for second passes
+
+  if NOT keyword_set(SUFFIX) then $
+     suffix = '.masked'
   
   if KEYWORD_SET(DOMASKED) then $
-     msksfx = '.masked' $
+     msksfx = suffix $
   else $
      msksfx = ''
-
+     
   if NOT keyword_set(ZMAX) then zmax = 3.
   
   ;; Go to the data
@@ -77,6 +81,8 @@ pro feedtopyspecfit2, field, $
      spawn, 'ln -s ../maketifffromstack.pro'
   if NOT (file_info('foldspecphot.pro')).exists then $
      spawn, 'ln -s ../foldspecphot.pro'
+  if NOT (file_info('getgeozoff.pro')).exists then $
+     spawn, 'ln -s ../getgeozoff.pro'
   spawn, 'ln -s ../*.sex .'
   spawn, 'ln -s ../*.param .'
   spawn, 'ln -s ../*.conf .'
@@ -196,7 +202,7 @@ pro feedtopyspecfit2, field, $
      
      regions = basic_regions+msksfx  ;; Spec extractions
      
-     if NOT (file_info(tid+'_'+tpa+'_OUTER.sed')).EXISTS then begin  
+     if NOT (file_info(tid+'_'+tpa+'_OUTER.pyspec')).EXISTS then begin  
         foldspecphot, tid+'_'+tpa, 'INTER' ;; added LEA 2017 06 09                                           
         foldspecphot, tid+'_'+tpa, 'OUTER' ;; Produces the spec/phot files (masked only) for INTER OUTER fits
      endif
@@ -206,9 +212,9 @@ pro feedtopyspecfit2, field, $
      check = file_info(outname)
      if NOT check.exists then $
         spawn, 'mkdir '+outname
-
+     
      for jj = 0, n_elements(regions) - 1 do begin
-
+        
         bdata = strmid(uID[ii], 0,5)+'_'+strmid(uID[ii], 5,1)+'_B.fits' 
         rdata = strmid(uID[ii], 0,5)+'_'+strmid(uID[ii], 5,1)+'_R.fits'
         
@@ -227,12 +233,13 @@ pro feedtopyspecfit2, field, $
            plotfittingregion, tid+'_'+tpa+'_'+region+'.unified.dat', zstart $
         else $
            plotfittingregion, tid+'_'+tpa+'_'+region+'.unified.dat', zfit
-
+        
         ;; Print the photometry
         pfile = tid+'_'+tpa+'_'+basic_regions[jj]+'.sed'
-        printphotforpyspec, repstr(bdata, '.fits', '_resolvedSED.fits'), $
-                            region = basic_regions[jj], $
-                            output = pfile
+        if region ne 'INTER' and region ne 'OUTER' then $
+           printphotforpyspec, repstr(bdata, '.fits', '_resolvedSED.fits'), $
+                               region = basic_regions[jj], $
+                               output = pfile
         
         ;; Do the fit. Find a baseline solution using the optimal
         ;; extraction and optimal profile weighted photometry. Then,
@@ -300,7 +307,7 @@ pro feedtopyspecfit2, field, $
                  print, ' *** *** *** *** *** *** *** *** *** *** *** *** *** '
               endif else $
                  zerr2 = zerr
-                 
+                            
               pyspecfitonetrace, tid, tpa, region, (zfit2 + zoff), zerr2, $
                                  photfile = pfile, $
                                  ncores = 12, $
@@ -379,11 +386,31 @@ pro doGood
   feedtopyspecfit2, 'MACS0744', /domasked
   feedtopyspecfit2, 'MACS0744', /domasked, sourcelist = '00660_tofit.list'
   feedtopyspecfit2, 'MACS1149', /domasked
-  feedtopyspecfit2, 'MACS1423', /domasked
   feedtopyspecfit2, 'MACS2129', /domasked
+  feedtopyspecfit2, 'MACS2129', /domasked, sourcelist = '00451_2_tofit.list'
+  feedtopyspecfit2, 'MACS1423', /domasked
+
 ;  feedtopyspecfit2, 'RXJC1347', /domasked
 ;  feedtopyspecfit2, 'RXJC2248', /domasked
 
+  feedtopyspecfitlognormal, 'MACS0744', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS1149', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS2129', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS2129', /domasked, sourcelist = '00451_2_tofit.list'
+  feedtopyspecfitlognormal, 'MACS0717', /domasked, sourcelist = 'forLognormalFitting.list'
+  feedtopyspecfitlognormal, 'MACS1423', /domasked, sourcelist = 'forLognormalFitting.list'
+
+  
+end
+
+pro check01266
+
+  feedtopyspecfit2, 'MACS0717', /domasked, suffix = '.masked2', $
+                    sourcelist = '01266_1_toRefit.list'
+  feedtopyspecfitlognormal, 'MACS0717', /domasked, suffix = '.masked2', $
+                            sourcelist = '01266_1_toRefit.list'
+  
+  
 end
 
 ;;

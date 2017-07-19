@@ -35,6 +35,14 @@ pro printphotforpyspec, photfile, $
         sed = data.SED_INNER
         err = data.SED_INNER_ERR
      end
+     'INTER': begin
+        sed = 0.5 * (data.SED_INTER_UP + data.SED_INTER_DN)
+        err = sqrt(data.SED_INTER_UP_ERR^2 + data.SED_INTER_DN_ERR^2)
+     end
+     'OUTER': begin
+        sed = 0.5 * (data.SED_INTER_UP + data.SED_INTER_DN)
+        err = sqrt(data.SED_OUTER_UP_ERR^2 + data.SED_OUTER_DN_ERR^2)
+     end
      'INTUP': begin
         sed = data.SED_INTER_UP
         err = data.SED_INTER_UP_ERR
