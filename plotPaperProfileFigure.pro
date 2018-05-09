@@ -1,8 +1,8 @@
 
 ;; Plot the observed profiles of the galaxies in any quantity
-pro plotprofiles, lgnlist, explist, output, $
-                  QUANTITY = quantity, $
-                  NITER = niter
+pro plotPaperProfileFigure, lgnlist, explist, output, $
+                            QUANTITY = quantity, $
+                            NITER = niter
 
   if NOT keyword_set(NITER) then niter = 100
   
@@ -222,22 +222,38 @@ pro plotprofiles, lgnlist, explist, output, $
   ;;;;;;;;;;;;;;;;;;
   ;;;;;;;;;;;;;;;;;;
   ;; Mass Density ;;
+  ;;  SFR Density ;;
+  ;;    Av(R)     ;;
   ;;;;;;;;;;;;;;;;;;
   ;;;;;;;;;;;;;;;;;;
   
   set_plot, 'PS'
-  xsize = 8.5
-  ysize = 4
+  xsize = 5.5
+  ysize = 8.5
   ar = ysize / xsize
-  device, filename = 'massProfiles.eps', $
+
+  xm = 0.2
+  xw = (1. - 2*xm) / 2.
+  x0 = xm
+  x1 = xm + xw
+
+  ym = 0.1
+  yw = (1. - (ym+0.05)) / 3. ;; top margin can be smaller
+  y0 = ym + 2 * yw
+  y1 = ym + yw
+  y2 = ym
+  
+  device, filename = 'multiProfiles.eps', $
           /col, /encap, /decomp, bits_per_pix = 8, $
           xsize = xsize, ysize = ysize, /in
   plot, rad, median(reform(msigmaprofs[0,*,*,0]), dim = 2), /nodat, $
-        xtitle = '!18r/r!D!Xe!N', xran = [-0.1,1.8], $
+;        xtitle = '!18r/r!D!Xe!N', $
+        xtickname = replicate(' ', 60), $
+        xran = [-0.1,1.8], $
         yran = [7.5,10], $
         ytitle = 'log '+greek('Sigma')+'!D!18M!X!L*!N [M!D'+sunsymbol()+'!N kpc!E-2!N]', $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4, $
-        pos = [0.1,0.15,0.5,0.9], /xsty
+        xthick = 3, ythick = 3, charsize = 1.3, charthick = 4, $
+        pos = [x0,y0,x1,y0+yw], /xsty
   xxx = [rad, reverse(rad)]
   plotsym, 0, /fill
   for ii = 0, ngals - 1 do begin
@@ -255,12 +271,6 @@ pro plotprofiles, lgnlist, explist, output, $
      ttr = reform(extrads[ii,extract])
      nuse = n_elements(extract)     
 
-;     tp = reform(median(msigmaprofs[ii,*,*,0], dim = 3))
-;     etp = 1. / alog(10) * reform(stddev(msigmaprofs[ii,*,*,0], dim = 3, /nan)) / tp
-;     xxx = [rad, reverse(rad)]
-;     yyy = [tp - 3 * etp, reverse(tp + 3 * etp)]
-
-;     polyfill, xxx < !X.CRANGE[1], yyy, col = cgcolor(string(cols[ii]))
      oplot, ttr, tmasses - reform(areas[ii,extract,0]), $
             thick = 10
      oplot, ttr, tmasses - reform(areas[ii,extract,0]), $
@@ -272,20 +282,19 @@ pro plotprofiles, lgnlist, explist, output, $
             col = cgcolor(string(cols[ii])), psym = 8
 
   endfor
-;  cgtext, 1.1, !Y.CRANGE[1]-0.1, 'half-mass radii', $
-;          orien = 270, align = 0, charsize = 1, charthick = 3
   
   top = 0.3
   plot, rad, median(reform(msigmaprofs[0,*,*,0]), dim = 2), /nodat, $
-        xtitle = '!18r/r!D!Xe!N', $
+;        xtitle = '!18r/r!D!Xe!N', $
 ;        ytitle = greek('Sigma')+'!D!18M!X!L*!N [M!D'+sunsymbol()+'!N kpc!E-2!N]', $
+        xtickname = replicate(' ', 60), $
         ytickname = replicate(' ', 60), $
         xran = !X.CRANGE+[1d-6,0], /xsty, $
         yran = [top-2,top], ysty = 8+1, $
-        pos = [0.5,0.15,0.9,0.9], /noer, $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4
-  axis, yaxis = 1, ytitle = 'log '+greek('Sigma')+'!D!18M!X!L*!N!18/<!X'+greek('Sigma')+'!D!18M!X!L*!N(!18r!X<1 kpc)!18>!X', $;, $
-        ythick = 3, charsize = 1.5, charthick = 4, $
+        pos = [x1,y0,x1+xw,y0+yw], /noer, $
+        xthick = 3, ythick = 3, charsize = 1.3, charthick = 4
+  axis, yaxis = 1, ytitle = 'log '+greek('Sigma')+'!D!18M!X!L*!N!18/<!X'+greek('Sigma')+'!D!18M!X!L*!N(!18r!X<1 kpc)!18>!X', $
+        ythick = 3, charsize = 1.3, charthick = 4, $
         yran = !Y.CRANGE, /ysty
   for ii = 0, ngals - 1 do begin
      mp = reform(msigmaprofs[ii,*,*,0])     
@@ -313,58 +322,38 @@ pro plotprofiles, lgnlist, explist, output, $
   plotsym, 0, /fill
   key = []
   for ii = 0, ngals - 1 do $
-     key = [key, string(rep[ii], f = '(F3.1)')+' kpc,'+string(ssfrs[ii], f = '(F5.1)')+' yr!E-1!N; '+names[ii]]
-  cgtext, !X.crange[0] + 0.12, -1.05, /data, $
-          '(!18r!X!De!N, log !18sSFR!X, name)=', charsize = 1, charthick = 3
-  legend, /bottom, /left, box = 0, $
+     key = [key, string(rep[ii], f = '(F3.1)')+','+string(ssfrs[ii], f = '(F5.1)')+'; '+names[ii]]
+  cgtext, mean(!X.crange), -0.925, /data, align = 0.5, $
+          '[!18r!X!De!N, log!18sSFR!X; obj.]', charsize = 1, charthick = 3
+  legend, pos = [!X.CRANGE[0],-1], /data, /left, box = 0, $
           key, $
           psym = replicate(8,ngals), $
           col = kcols, pspacing = 0.5, $
           charsize = 1, charthick = 3
-  
-  device, /close
-  spawn, 'gv massProfiles.eps &'
 
-  stop
+  ;;
+  ;;
+  ;;
   
-  ;;;;;;;;;;;;;;;;;;
-  ;;;;;;;;;;;;;;;;;;
-  ;; SFR Density ;;
-  ;;;;;;;;;;;;;;;;;;
-  ;;;;;;;;;;;;;;;;;;
-  
-  set_plot, 'PS'
-  xsize = 8.5
-  ysize = 4
-  ar = ysize / xsize
-  device, filename = 'sfrProfiles.eps', $
-          /col, /encap, /decomp, bits_per_pix = 8, $
-          xsize = xsize, ysize = ysize, /in
   plot, rad, reform(sfrs[*,resreg,0]) - areas[*,resreg], /nodat, $
-        xtitle = '!18r/r!D!Xe!N', xran = [-0.1, 1.8], /xsty, $
-        yran = [-2.5,0], $
+;        xtitle = '!18r/r!D!Xe!N', $
+        xtickname = replicate(' ', 60), $
+        xran = [-0.1, 1.8], /xsty, $
+        yran = [-2.5,0.1], /ysty, $
         ytitle = 'log '+greek('Sigma')+'!D!18SFR!X!N [M!D'+sunsymbol()+'!N yr !E-1!N kpc!E-2!N]', $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4, $
-        pos = [0.1,0.15,0.5,0.9]
+        xthick = 3, ythick = 3, charsize = 1.3, charthick = 4, $
+        pos = [x0,y1,x0+xw,y0], /noer
   plotsym, 0, /fill
   for ii = 0, ngals - 1 do begin
-;     tre = (median(hmrs[ii,*,0], dim = 2))[0]
-;     sre = (stddev(hmrs[ii,*,0], dim = 2, /nan))[0]
-;     oplot, replicate(tre,2), !Y.CRANGE[0] + [0,0.2], thick = 10
-;     oplot, tre + sre * [-1,1], $
-;            !Y.CRANGE[0] + [0.2,0.2], thick = 10
-;     oplot, replicate(tre,2), !Y.CRANGE[0] + [0,0.2], col = cgcolor(string(cols[ii])), thick = 6
-;     oplot, tre + sre * [-1,1], $
-;            !Y.CRANGE[0] + [0.2,0.2], thick = 6, col = cgcolor(string(cols[ii]))
 
      ;; do detections and upper limits...
      tr = resreg[sort(extrads[ii,resreg])]
      use = where(sfrs[ii,tr,0] ne 0, nuse)
      uls = where(sfrs[ii,tr,0] eq 0, nuls)
      oplot, extrads[ii,tr], alog10(sfrs[ii,tr,0] > nsig * lsfrs[ii,tr,0])- areas[ii,tr,0], $
-            thick = 10, linesty = 2
+            thick = 10, linesty = 1
      oplot, extrads[ii,tr], alog10(sfrs[ii,tr,0] > nsig * lsfrs[ii,tr,0]) - areas[ii,tr,0], $
-            thick = 4, col = cgcolor(string(cols[ii])), linesty = 2
+            thick = 4, col = cgcolor(string(cols[ii])), linesty = 1
      if nuls gt 0 then begin
         plotsym, 1, thick = 10
         oplot, [extrads[ii,tr[uls],0]], [alog10(nsig * lsfrs[ii,tr[uls],0]) - areas[ii,tr[uls],0]], $
@@ -389,19 +378,18 @@ pro plotprofiles, lgnlist, explist, output, $
      endif
      
   endfor
-;  cgtext, 1.1, !Y.CRANGE[1]-0.1, 'half-mass radii', $
-;          orien = 270, align = 0, charsize = 1, charthick = 3
   
   plot, rad, sfrs[0,*,0], /nodat, $
-        xtitle = '!18r/r!D!Xe!N', $
+;        xtitle = '!18r/r!D!Xe!N', $
 ;        ytitle = greek('Sigma')+'!D!18M!X!L*!N [M!D'+sunsymbol()+'!N kpc!E-2!N]', $
+        xtickname = replicate(' ', 60), $
         ytickname = replicate(' ', 60), $
         xran = !X.CRANGE+[1d-6,0], /xsty, $
         yran = [-11,-8.3], ysty = 8+1, $
-        pos = [0.5,0.15,0.9,0.9], /noer, $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4
+        pos = [x1,y1,x1+xw,y0], /noer, $
+        xthick = 3, ythick = 3, charsize = 1.3, charthick = 4
   axis, yaxis = 1, ytitle = 'log !18SFR!N/M!X!D*!N [yr!E-1!N]', $;, $
-        ythick = 3, charsize = 1.5, charthick = 4, $
+        ythick = 3, charsize = 1.3, charthick = 4, $
         yran = !Y.CRANGE, /ysty
   for ii = 0, ngals - 1 do begin
      ;; do detections and upper limits...
@@ -409,9 +397,9 @@ pro plotprofiles, lgnlist, explist, output, $
      use = where(sfrs[ii,tr,0] ne 0, nuse)
      uls = where(sfrs[ii,tr,0] eq 0, nuls)
      oplot, extrads[ii,tr], alog10(sfrs[ii,tr,0] > nsig * lsfrs[ii,tr,0])- masses[ii,tr,0], $
-            thick = 10, linesty = 2
+            thick = 10, linesty = 1
      oplot, extrads[ii,tr], alog10(sfrs[ii,tr,0] > nsig * lsfrs[ii,tr,0]) - masses[ii,tr,0], $
-            thick = 4, col = cgcolor(string(cols[ii])), linesty = 2
+            thick = 4, col = cgcolor(string(cols[ii])), linesty = 1
      if nuls gt 0 then begin
         plotsym, 1, thick = 10
         oplot, [extrads[ii,tr[uls],0]], [alog10(nsig * lsfrs[ii,tr[uls],0]) - masses[ii,tr[uls],0]], $
@@ -444,38 +432,17 @@ pro plotprofiles, lgnlist, explist, output, $
   key = []
   for ii = 0, ngals - 1 do $
      key = [key, string(rep[ii], f = '(F3.1)')+' kpc,'+string(ssfrs[ii], f = '(F5.1)')+' yr!E-1!N; '+names[ii]]
-;  cgtext, !X.crange[-1] - 0.1, !Y.CRANGE[0]+0.9, /data, $
-;          '(!18r!X!De!N, log !18sSFR!X)=', charsize = 1, charthick = 3, align = 1
-;  legend, /top, /right, box = 0, $
-;          key, $
-;          psym = replicate(8,ngals), $
-;          col = kcols, pspacing = 0.5, $
-;          charsize = 1, charthick = 3
-  
-  device, /close
-  spawn, 'gv sfrProfiles.eps &'
 
-;  stop
+  ;;
+  ;;
+  ;;
 
-  ;;;;;;;;;;
-  ;;;;;;;;;;
-  ;; DUST ;;
-  ;;;;;;;;;;
-  ;;;;;;;;;;
-  
-  set_plot, 'PS'
-  xsize = 8.5
-  ysize = 4.
-  ar = ysize / xsize
-  device, filename = 'dustProfiles.eps', $
-          /col, /encap, /decomp, bits_per_pix = 8, $
-          xsize = xsize, ysize = ysize, /in
   plot, rad, median(reform(dustprofs[0,*,*,0]), dim = 2), /nodat, $
         xran = [-0.1, 1.8], /xsty, $
-        xtitle = '!18r/r!D!Xe!N', yran = [0,2], $
-        ytitle = 'A!D!18V!X,LogNormal!N [Mag]', $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4, $
-        pos = [0.1,0.15,0.5,0.9]
+        xtitle = '!18r/r!D!Xe!N', yran = [0,2.1], ytickint = 0.5, /ysty, $
+        ytitle = 'A!D!18V!X,LgNml!N [mag]', $
+        xthick = 3, ythick = 3, charsize = 1.3, charthick = 4, $
+        pos = [x0,y2,x0+xw,y1], /noer
   plotsym, 0, /fill
   for ii = 0, ngals - 1 do begin
 
@@ -493,42 +460,18 @@ pro plotprofiles, lgnlist, explist, output, $
                  psym = 8, symsize = 1.3, /nohat
      oplot, ttr, tavs, $
             col = cgcolor(string(cols[ii])), psym = 8
-
-;     mp = reform(dustprofs[ii,*,*,0])     
-;     mmm = median(mp, dim = 2)
-;     eee = stddev(mp, dim = 2)
-;     oplot, rad, mmm+eee, thick = 4
-;     oplot, rad, mmm-eee, thick = 4     
-;     polyfill, xxx < !X.CRANGE[1], [mmm-eee, reverse(mmm+eee)] < !Y.CRANGE[1], $
-;               col = cgcolor(string(cols[ii])), /line_fill, $
-;               thick = 1, orien = ii * 45, spacing = 0.025
   endfor
-;  for ii = 0, ngals - 1 do begin
-;     oplot, extrads[ii,resreg], avs[ii,resreg,1], col = '777777'x, thick = 4
-;     oplot, extrads[ii,resreg], avs[ii,resreg,1], col = cgcolor(string(cols[ii])), thick = 2
-;     oploterror, extrads[ii,resreg], avs[ii,resreg,1], eavs[ii,resreg,1], $
-;                 psym = 8, symsize = 1.25, col = '777777'x, errcol = '777777'x, $
-;                 errthick = 4
-;     oplot, extrads[ii,resreg], avs[ii,resreg,1], psym = 8, col = cgcolor(string(cols[ii]))
-;;     oplot, rad, mmm+eee, thick = 6, linesty = 2
-;;     oplot, rad, mmm-eee, thick = 6, linesty = 2
-;;     oplot, rad, mmm+eee, thick = 2, col = cgcolor(string(cols[ii])), linesty = 2
-;;     oplot, rad, mmm-eee, thick = 2, col = cgcolor(string(cols[ii])), linesty = 2
-;  endfor
-     
-;  cgtext, 1.1, !Y.CRANGE[1]-0.1, 'half-mass radii', $
-;          orien = 270, align = 0, charsize = 1, charthick = 3
-  
+
   plot, rad, sfrs[0,*,0], /nodat, $
         xtitle = '!18r/r!D!Xe!N', $
 ;        ytitle = greek('Sigma')+'!D!18M!X!L*!N [M!D'+sunsymbol()+'!N kpc!E-2!N]', $
         ytickname = replicate(' ', 60), $
         xran = !X.CRANGE+[1d-6,0], /xsty, $
         yran = !Y.CRANGE, ysty = 8+1, $
-        pos = [0.5,0.15,0.9,0.9], /noer, $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4
-  axis, yaxis = 1, ytitle = 'A!D!18V!X,DelayedExponential!N [mag]', $;, $
-        ythick = 3, charsize = 1.5, charthick = 4, $
+        pos = [x1,y2,x1+xw,y1], /noer, $
+        xthick = 3, ythick = 3, charsize = 1.3, charthick = 4
+  axis, yaxis = 1, ytitle = 'A!D!18V!X,DelExp!N [mag]', $;, $
+        ythick = 3, charsize = 1.3, charthick = 4, $
         yran = !Y.CRANGE, /ysty
   for ii = 0, ngals - 1 do begin
        
@@ -556,254 +499,9 @@ pro plotprofiles, lgnlist, explist, output, $
   key = []
   for ii = 0, ngals - 1 do $
      key = [key, string(rep[ii], f = '(F3.1)')+' kpc,'+string(ssfrs[ii], f = '(F5.1)')+' yr!E-1!N; '+names[ii]]
-;  cgtext, !X.crange[0] + 0.1, !Y.CRANGE[1]-0.1, /data, $
-;          '(!18r!X!De!N, log !18sSFR!X)=', charsize = 1, charthick = 3
-;  legend, /bottom, /right, box = 0, $
-;          key, $
-;          psym = replicate(8,ngals), $
-;          col = kcols, pspacing = 0.5, $
-;          charsize = 1, charthick = 3
-  
+ 
   device, /close
-  spawn, 'gv dustProfiles.eps &'
-
-  ;;;;;;;;;;;;;;;
-  ;;;;;;;;;;;;;;;
-  ;; SFH stuff ;;
-  ;;;;;;;;;;;;;;;
-  ;;;;;;;;;;;;;;;
-
-  set_plot, 'PS'
-  xsize = 8.5
-  ysize = 4.
-  ar = ysize / xsize
-  device, filename = 'expProfiles.eps', $
-          /col, /encap, /decomp, bits_per_pix = 8, $
-          xsize = xsize, ysize = ysize, /in
-  plot, rad, median(reform(dustprofs[0,*,*,0]), dim = 2), /nodat, $
-        xran = [-0.1, 1.8], /xsty, $
-        xtitle = '!18r/r!D!Xe!N', yran = [0,5], $
-        ytitle = 'age [Gyr]', $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4, $
-        pos = [0.1,0.15,0.5,0.9], yminor = 2
-  plotsym, 0, /fill
-  for ii = 0, ngals - 1 do begin
-
-     tavs = reform(ages[ii,tr])
-     etavs = reform(eages[ii,tr])     
-     ttr = reform(extrads[ii,tr])
-     nuse = n_elements(tr)
-     
-     oplot, ttr, tavs, $
-            thick = 10, col = '777777'x
-     oplot, ttr, tavs, $
-            thick = 4, col = cgcolor(string(cols[ii]))
-     oploterror, ttr, tavs, $
-                 (10.^(0.5*emags[ii])-1)*ttr, etavs, $
-                 psym = 8, symsize = 1.3, /nohat, col = '777777'x, errcol = '777777'x
-     oplot, ttr, tavs, $
-            col = cgcolor(string(cols[ii])), psym = 8
-
-  endfor
-  rep = prs[*,value_locate(rad, 1.0)]
-  kcols = []
-  for ii = 0, ngals- 1 do $
-     kcols = [kcols, cgcolor(string(cols[ii]))]
-  plotsym, 0, /fill
-  key = []
-  for ii = 0, ngals - 1 do $
-     key = [key, string(rep[ii], f = '(F3.1)')+' kpc,'+string(ssfrs[ii], f = '(F5.1)')+' yr!E-1!N; '+names[ii]]
-;  cgtext, !X.crange[0] + 0.1, !Y.CRANGE[1]-0.1, /data, $
-;          '(!18r!X!De!N, log !18sSFR!X)=', charsize = 1, charthick = 3
-  legend, /top, /right, box = 0, $
-          key, $
-          psym = replicate(8,ngals), $
-          col = kcols, pspacing = 0.5, $
-          charsize = 1, charthick = 3
-  
-  plot, rad, sfrs[0,*,0], /nodat, $
-        xtitle = '!18r/r!D!Xe!N', $
-;        ytitle = greek('Sigma')+'!D!18M!X!L*!N [M!D'+sunsymbol()+'!N kpc!E-2!N]', $
-        ytickname = replicate(' ', 60), $
-        xran = !X.CRANGE+[1d-6,0], /xsty, $
-        yran = [0,10], ysty = 8+1, $
-        pos = [0.5,0.15,0.9,0.9], /noer, $
-        xthick = 3, ythick = 3, charsize = 1.5, charthick = 4, yminor = 2
-  axis, yaxis = 1, ytitle = 'SFH !18e!X-foldings', $;, $
-        ythick = 3, charsize = 1.5, charthick = 4, $
-        yran = !Y.CRANGE, /ysty, yminor = 2
-  for ii = 0, ngals - 1 do begin
-       
-     tavs = reform(efolds[ii,tr])
-     if total(tavs lt !Y.CRANGE[1]) eq nuse then begin
-        oplot, ttr, tavs, $
-               thick = 10, col = '777777'x
-        oplot, ttr, tavs, $
-               thick = 4, col = cgcolor(string(cols[ii]))
-        oploterror, ttr, tavs, $
-                    (10.^(0.5*emags[ii])-1)*ttr, replicate(0,n_elements(tavs)), $
-                    psym = 8, symsize = 1.3, col = '777777'x, errcol = '777777'x, /nohat
-        oplot, ttr, tavs, $
-               col = cgcolor(string(cols[ii])), psym = 8
-     endif else begin
-        oplot, ttr, replicate(!Y.CRANGE[1] - 1, nuse), $
-               thick = 10, col = '777777'x
-        oplot, ttr, replicate(!Y.CRANGE[1] - 1, nuse), $
-               thick = 4, col = cgcolor(string(cols[ii]))
-        plotsym, 2, thick = 10
-        oplot, ttr, replicate(!Y.CRANGE[1] - 1, nuse), psym = 8, $
-               thick = 10, col = '777777'x, symsize = 2
-        plotsym, 2, thick = 6
-        oplot, ttr, replicate(!Y.CRANGE[1] - 1, nuse), psym = 8, $
-               thick = 6, col = cgcolor(string(cols[ii])), symsize = 2
-        plotsym, 0, /fill
-     endelse
-
-  endfor
-  
-  device, /close
-  set_plot, 'X'
-  spawn, 'gv expProfiles.eps &'
-  
-  plotsym, 0, /fill
-  xw = (0.9 - 0.1) / 3.
-  set_plot, 'PS'
-  xsize = 8.5
-  ysize = 3.
-  ar = ysize / xsize
-  device, filename = 'lgnProfiles.eps', $
-          /col, /encap, /decomp, bits_per_pix = 8, $
-          xsize = xsize, ysize = ysize, /in
-  !p.multi = [0,3,0]
-  plot, ttr, t0s[0,*], /nodat, $
-        xran = [-0.1, 1.8], /xsty, $
-        xtitle = '!18r/r!D!Xe!N', yran = [0.5,2], $
-        ytitle = '!18T!D!X0!N [ln(Gyr)]', $
-        xthick = 3, ythick = 3, charsize = 2, charthick = 4;, $
-;        pos = [0.1,0.15,0.1+xw,0.9]
-  plotsym, 0, /fill
-  for ii = 0, ngals - 1 do begin
-
-     tavs = reform(t0s[ii,tr])
-     etavs = reform(et0s[ii,tr])     
-     ttr = reform(extrads[ii,tr])
-     nuse = n_elements(tr)
-     
-     oplot, ttr, tavs, $
-            thick = 10
-     oplot, ttr, tavs, $
-            thick = 4, col = cgcolor(string(cols[ii]))
-     oploterror, ttr, tavs, $
-                 (10.^(0.5*emags[ii])-1)*ttr, etavs, $
-                 psym = 8, symsize = 1.3, /nohat
-     oplot, ttr, tavs, $
-            col = cgcolor(string(cols[ii])), psym = 8
-
-  endfor
-
-  plot, ttr, taus[0,*], /nodat, $
-        xtitle = '!18r/r!D!Xe!N', $
-        ytitle =  greek('tau')+' [ln(Gyr)]', $
-;        ytickname = replicate(' ', 60), $
-        xran = !X.CRANGE+[1d-6,0], /xsty, $
-        yran = [0,2.5], ysty = 1, $
-;        pos = [!X.WINDOW[1],0.15,!X.WINDOW[1]+xw,0.9], $; /noer, $
-        xthick = 3, ythick = 3, charsize = 2, charthick = 4
-;  axis, yaxis = 1, ytitle = greek('tau')+' [ln(Gyr)]', $;, $
-;        ythick = 3, charsize = 2, charthick = 4, $
-;        yran = !Y.CRANGE, /ysty
-  for ii = 0, ngals - 1 do begin
-       
-     tavs = reform(taus[ii,tr])
-     etavs = reform(etaus[ii,tr])
-     ttr = reform(extrads[ii,tr])
-     nuse = n_elements(tr)
-     
-     oplot, ttr, tavs, $
-            thick = 10
-     oplot, ttr, tavs, $
-            thick = 4, col = cgcolor(string(cols[ii]))
-     oploterror, ttr, tavs, $
-                 (10.^(0.5 * emags[ii])-1)*ttr, etavs, $
-                 psym = 8, symsize = 1.3, /nohat
-     oplot, ttr, tavs, $
-            col = cgcolor(string(cols[ii])), psym = 8
-
-  endfor
-
-  plot, ttr, pktimes[0,*], /nodat, $
-        xtitle = '!18r/r!D!Xe!N', $
-        ytitle = '!18T!X!Dpeak!N [ln(Gyr)]', $
-;        ytickname = replicate(' ', 60), $
-        xran = !X.CRANGE+[1d-6,0], xsty = 1, $
-        yran = [-1,alog(10)], ysty = 8+1, $
-;        pos = [!X.WINDOW[1],0.15,!X.WINDOW[1]+xw,0.9], /noer, $
-        xthick = 3, ythick = 3, charsize = 2, charthick = 4
-  ty = findgen((exp(!Y.CRANGE[1]) - exp(!Y.CRANGE[0]))/0.1+1)*0.1 + exp(!Y.CRANGE[0])
-  axis, yaxis = 1, ytitle = '!18z!X!Dpeak!N', $
-        ythick = 3, charsize = 2, charthick = 4, $
-;        yran = reverse(getredshift(minmax(ty))), /ysty, $
-        ytickv = alog(ty[value_locate(getredshift(ty), [8,6,4,2,1])]), $
-        ytickname = ['8','6','4','2','1'], yticks = 4, yminor = 2
-  for ii = 0, ngals - 1 do begin
-       
-     tavs = reform(pktimes[ii,tr])
-     etavs = reform(epktimes[ii,tr])
-     ttr = reform(extrads[ii,tr])
-     nuse = n_elements(tr)
-     
-     oplot, ttr, tavs, $
-            thick = 10
-     oplot, ttr, tavs, $
-            thick = 4, col = cgcolor(string(cols[ii]))
-     oploterror, ttr, tavs, $
-                 (10.^(0.5*emags[ii])-1)*ttr, etavs, $
-                 psym = 8, symsize = 1.3, /nohat
-     oplot, ttr, tavs, $
-            col = cgcolor(string(cols[ii])), psym = 8
-
-  endfor
-  
-;  rep = prs[*,value_locate(rad, 1.0)]
-;  kcols = []
-;  for ii = 0, ngals- 1 do $
-;     kcols = [kcols, cgcolor(string(cols[ii]))]
-;  plotsym, 8, /fill
-;  key = []
-;  for ii = 0, ngals - 1 do $
-;     key = [key, string(rep[ii], f = '(F3.1)')+' kpc,'+string(ssfrs[ii], f = '(F5.1)')+' yr!E-1!N']
-;;  cgtext, !X.crange[0] + 0.1, !Y.CRANGE[1]-0.1, /data, $
-;;          '(!18r!X!De!N, log !18sSFR!X)=', charsize = 1, charthick = 3
-;  legend, /bottom, /right, box = 0, $
-;          key, $
-;          psym = replicate(8,ngals), $
-;          col = kcols, pspacing = 0.5, $
-;          charsize = 1, charthick = 3
-  
-  device, /close
-  spawn, 'gv lgnProfiles.eps &'
-  set_plot, 'X'
-  !P.multi = 0
-  
-;  stop
-
-;  plot, taus[*,master], bts[*,0], psym = 1, xran = [0,3], yran = [0,1]     
-;  oplot, tdat.TAU, tdat.MBT, psym = 1, col = '777777'x                
-;  oploterror, taus[*,master], bts[*,0], etaus[*,master], ebts[*,0]
-
-;  case quantity of
-;     'MASS'
-;     'MDENSITY'
-;     'SDENSITY'
-;     'SSFR'
-;     'A_V'
-;     'AGE'
-;     'T0'
-;     'TAU'
-;     'PEAKTIME'
-;  endcase
-  
-  
+  spawn, 'gv multiProfiles.eps &'
   
 end
-;plotprofiles, 'study5_lgn_Bestfits.list', 'study5_exp_Bestfits.list'
+;plotPaperProfileFigure, 'study5_lgn_Bestfits.list', 'study5_exp_Bestfits.list'

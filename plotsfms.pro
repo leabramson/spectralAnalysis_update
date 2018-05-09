@@ -6,10 +6,35 @@ pro plotsfms, lgnlist, explist, $
   summaryData = mrdfits('objectSummaryData.fits', 1)
   finalMasses = mrdfits('finalMasses.fits', 1)
 ;  magerr = 2./alog(10) * summaryData.EMU/summaryData.MU
+
+  ;; Get MW values from G13
+  samplez = mean(summaryData.Z)
+  g13 = mrdfits('mikeGenBasic.fits', 1)
+  mws = where(alog10(g13.MSTEL_OBS) ge 10.6 AND alog10(g13.MSTEL_OBS) le 10.8)
+  hit = value_locate(g13.REDSHIFT, samplez)
+  sf = mws[where(alog10(g13.SFR_OBS[MWS]/g13.MSTEL_OBS[MWS]) ge -11)]
+  pas = mws[where(alog10(g13.SFR_OBS[MWS]/g13.MSTEL_OBS[MWS]) lt -11 OR g13.SFR_OBS[MWS] eq 0)]
+  mw_sf_m1 = median(alog10(g13.MSTEL_T[hit,sf]))
+  mw_sf_s1 = median(alog10(g13.SFR_T[hit,sf])) - 9
+  emw_sf_m1 = stddev(g13.MSTEL_T[hit,sf], /nan) / $
+              median(g13.MSTEL_T[hit,sf])/alog(10)
+  emw_sf_s1 = stddev(g13.SFR_T[hit,sf], /nan) / $
+              median(g13.SFR_T[hit,sf])/alog(10)
+  mw_pas_m1 = median(alog10(g13.MSTEL_T[hit,pas]))
+  mw_pas_s1 = median(alog10(g13.SFR_T[hit,pas])) - 9
+  emw_pas_m1 = stddev(g13.MSTEL_T[hit,pas], /nan) / $
+               median(g13.MSTEL_T[hit,pas])/alog(10)
+  emw_pas_s1 = stddev(g13.SFR_T[hit,pas], /nan) / $
+               median(g13.SFR_T[hit,pas])/alog(10)
+
+;  stop
   
   readcol, explist, expfiles, f = 'A'
   readcol, lgnlist, lgnfiles, f = 'A'
 
+  ;; Read evo tracks just to put arrows on the points
+  readcol, repstr(lgnlist, 'Bestfit', 'Recon'), lgnrecons, f = 'A'
+  
   ngals = n_elements(lgnfiles)
 
   test     = mrdfits(lgnfiles[0], 1)
@@ -24,7 +49,12 @@ pro plotsfms, lgnlist, explist, $
   masses  = fltarr(ngals, nregions, 2)
   emasses = fltarr(ngals, nregions, 2)
 
+  dms = fltarr(ngals, nregions)
+  dss = fltarr(ngals, nregions)
+  dnorms = fltarr(ngals, nregions)
+  
   files = strarr(ngals)
+  names = []
   for ii = 0, ngals - 1 do begin
      for jj = 0, 1 do begin
         case jj of
@@ -32,12 +62,29 @@ pro plotsfms, lgnlist, explist, $
               file = lgnfiles[ii]
               print, file
               files[ii] = strmid(file, 0, 7)
+              case files[ii] of
+                 '00900_1': nn = 'SSF'
+                 '00451_2': nn = 'CSF'
+                 '01916_2': nn = 'PSB'
+                 '00660_2': nn = 'PAS'
+              endcase
+              names = [names, nn]
               qui = where(summaryData.ID eq files[ii])
               mag = summaryData[qui].MU
               mag = mag[0]
               emag = summaryData[qui].EMU
               emag = emag[0]
               print, mag
+              evo = mrdfits(lgnrecons[ii], 1, /silent)
+              hit = value_locate(evo[0].time, $
+                                 getage(summaryData[qui].Z)+[-1,0,1])
+              for kk = 0, nregions - 1 do begin
+                 thit = where(evo.REGION eq regions[kk])
+                 dms[ii,kk] = alog10(evo[thit].MGH[hit[2],1]/evo[thit].MGH[hit[0],1])
+                 dss[ii,kk] = alog10(evo[thit].SFH[hit[2],1]/evo[thit].SFH[hit[0],1])
+                 dnorms[ii,kk] = sqrt(dms[ii,kk]^2 + dss[ii,kk]^2)
+                 print, regions[kk], ' ', evo[thit].REGION, dms[ii,kk], dss[ii,kk]
+              endfor
            end
            1: file = expfiles[ii]
         endcase
@@ -83,6 +130,30 @@ pro plotsfms, lgnlist, explist, $
   emasses[*,extract[0],0] = efmasses
   emasses[*,extract[0],1] = efmasses
 
+  imasses = fltarr(ngals, 2)
+  eimasses = fltarr(ngals, 2)
+  isfrs = fltarr(ngals,2)
+  eisfrs = fltarr(ngals,2)
+  for ii = 0, ngals - 1 do begin
+     for jj = 0, 1 do begin
+        imasses[ii,jj]  = alog10(10.^masses[ii,extract[1],jj] + 2 * 10.^masses[ii,extract[2],jj] + 2 * 10.^masses[ii,extract[3],jj])
+        eimasses[ii,jj] = sqrt(emasses[ii,extract[1],jj]^2 + 2 * emasses[ii,extract[2],jj]^2 + 2 * emasses[ii,extract[3],jj]^2 + emag^2)
+        isfrs[ii,jj] = sfrs[ii,extract[1],jj] + 2 * sfrs[ii,extract[2],jj] + 2 * sfrs[ii,extract[3],jj]
+        eisfrs[ii,jj] = sqrt(esfrs[ii,extract[1],jj]^2 + 2 * esfrs[ii,extract[2],jj]^2 + 2 * esfrs[ii,extract[3],jj]^2 + emag^2)
+     endfor
+  endfor
+
+  plotsym, 0, /fill
+  plot, masses[*,extract[0],0], imasses[*,0], $
+        xran = [10.2,11.7], yran = [10.2,11.7], /iso, /nodat
+  oploterror, masses[*,extract[0],0], imasses[*,0], $
+              emasses[*,extract[0],0], eimasses[*,0], psym = 8
+  oploterror, masses[*,extract[0],1], imasses[*,1], $
+              emasses[*,extract[0],1], eimasses[*,1], errcol = '777777'x, psym = 8
+  one_one
+  
+;  stop
+  
   ;; SFMS from whitaker+14 @ 1 < z < 1.5
   a  = -26.03 - 0.15 ;; to Salpeter
   ae = 1.69
@@ -106,6 +177,7 @@ pro plotsfms, lgnlist, explist, $
   q = where(m gt !X.CRANGE[0] and m lt !X.crange[1]) ; AND sfms gt !Y.CRANGE[0] AND sfms lt !Y.CRANGE[1])
   polyfill, [m[q], reverse(m[q])], [sfms[q]-0.3, reverse(sfms[q]+0.3)] < !Y.CRANGE[1], $ ;col = '555555'x
             /line_fill, orien = -45, thick = 1, spacing = 0.025, col = sfmscol
+  
   for ii = 0, n_elements(pregions) - 1 do begin
 
      for jj = 0, 1 do begin
@@ -215,16 +287,57 @@ pro plotsfms, lgnlist, explist, $
      polyfill, [m[q], reverse(m[q])], [sfms[q]-0.3, reverse(sfms[q]+0.3)] < !Y.CRANGE[1], $;col = '555555'x
                /line_fill, orien = -45, thick = 1, spacing = 0.025, col = sfmscol
 ;     oplot, m[q], sfms[q], thick = 6, col = 'ffa500'x, linesty = 2
+     if names[kk] eq 'CSF' or names[kk] eq 'SSF' then $
+        oplot, m[q], 0.99 * (m[q]-10.2) + 1.31 - 0.31, linesty = 1, thick = 2 ;; W+14 fixed slope z=1-1.5 low-mass
+     polyfill, (mw_pas_m1 + emw_pas_m1 * [-1,-1,1,1]) > !X.CRANGE[0], $
+               mw_pas_s1 + emw_pas_s1 * [-1,1,1,-1], $
+               /line_fill, col = '00a5ff'x, thick = 1, spacing = 0.1, orien = -60
+;     polyfill, (10.7 + 0.1 * [-1,-1,1,1]) > !X.CRANGE[0], $
+;               [!Y.CRANGE[0], 0.5, 0.5, !Y.CRANGE[0]], $ ;mw_pas_s1 - emw_pas_s1 * [1,1]
+;               /line_fill, col = '00a5ff'x, thick = 1, spacing = 0.1, orien = -60
+     if kk eq 1 then  $
+        cgtext, mw_pas_m1, mw_pas_s1, /data, $ ; + emw_pas_M1 + 0.15
+                'PAS MWs', col = long('0055ff'x), charthick = 4, charsize = 0.9, align = 0.5, orien = 50
+     polyfill, (mw_sf_m1 + emw_sf_m1 * [-1,-1,1,1]) > !X.CRANGE[0], $
+               mw_sf_s1 + emw_sf_s1 * [-1,1,1,-1], $
+               /line_fill, col = 'ffa500'x, thick = 1, spacing = 0.1, orien = 60
+     if kk eq 1 then $
+        cgtext, mean([mw_sf_m1+emw_sf_m1, !X.CRANGE[0]]), mw_sf_s1 - 0.05, /data, $;
+                'SF MWs', col = long('ff5500'x), charthick = 4, charsize = 0.9, align = 0.5
+;     oplot, mw_sf_m1 + emw_sf_m1 * [-1,1], replicate(mw_sf_s1 - emw_sf_s1, 2), $
+;            col = 'ffa500'x, thick = 10
+;     oplot, mw_sf_m1 + emw_sf_m1 * [-1,1], replicate(mw_sf_s1 + emw_sf_s1, 2), $
+;            col = 'ffa500'x, thick = 10
+;     oplot, replicate(mw_sf_m1 - emw_sf_m1, 2), mw_sf_s1 + emw_sf_s1 * [-1,1], $
+;            col = 'ffa500'x, thick = 10
+;     oplot, replicate(mw_sf_m1 + emw_sf_m1, 2), mw_sf_s1 + emw_sf_s1 * [-1,1], $
+;            col = 'ffa500'x, thick = 10
+;     oplot, mw_pas_m1 + emw_pas_m1 * [-1,1], replicate(mw_pas_s1 - emw_pas_s1, 2), $
+;            col = '00a5ff'x, thick = 6
+;     oplot, mw_pas_m1 + emw_pas_m1 * [-1,1], replicate(mw_pas_s1 + emw_pas_s1, 2), $
+;            col = '00a5ff'x, thick = 6
+;     oplot, replicate(mw_pas_m1 - emw_pas_m1, 2), mw_pas_s1 + emw_pas_s1 * [-1,1], $
+;            col = '00a5ff'x, thick = 6
+;     oplot, replicate(mw_pas_m1 + emw_pas_m1, 2), mw_pas_s1 + emw_pas_s1 * [-1,1], $
+;            col = '00a5ff'x, thick = 6
+  
      oplot, masses[kk,extract[1:*],0], alog10(sfrs[kk,extract[1:*],0] > nsig * lsfrs[kk,extract[1:*],0]), $
             linesty = 0, thick = 6
      oplot, masses[kk,extract[1:*],1], alog10(sfrs[kk,extract[1:*],1] > nsig * lsfrs[kk,extract[1:*],1]), $
             linesty = 2, thick = 6
-
+     for ll = 0, n_elements(extract) - 1 do $
+        if sfrs[kk,extract[ll],0] then $
+           arrow, masses[kk,extract[ll],0], $
+                  alog10(sfrs[kk, extract[ll], 0]), $
+                  masses[kk,extract[ll],0] + dms[kk, extract[ll]] / dnorms[kk,extract[ll]] / 4., $
+                  alog10(sfrs[kk, extract[ll], 0]) + dss[kk, extract[ll]] / dnorms[kk, extract[ll]] / 4., $
+                  col = cols[ll], thick = 4, hsize = 200, /data
+     
      q = where(summaryData.ID eq files[kk])
      mu  = summaryData[q].MU
      emu = 1./alog(10) * summaryData[q].EMU / mu
      xctr = 11.
-     yctr = 0.3
+     yctr = 0.2
      sx = xctr - emu
      ex = xctr + emu
      sy = yctr - emu
@@ -262,9 +375,9 @@ pro plotsfms, lgnlist, explist, $
            if tsfrs gt 0 then begin
               oploterror, [tmasses], [alog10(tsfrs)], $
                           [temasses], [sqrt((0.5/alog(10) * tesfrs / tsfrs)^2 + emu^2)], $
-                          psym = 8, col = ec, errcol = ec, symsize = 1.25, $
+                          psym = 8, col = ec, errcol = ec, symsize = 1.5, $
                           errthick = 4, /nohat
-              oplot, [tmasses], [alog10(tsfrs)], psym = 8, symsize = 1, col = cols[ii]
+              oplot, [tmasses], [alog10(tsfrs)], psym = 8, symsize = 1.2, col = cols[ii]
            endif else begin
               oplot, tmasses + temasses * [-1,1], $
                      replicate(alog10(nsig * tlsfrs) > (!Y.CRANGE[0] + 0.2), 2), $
@@ -276,9 +389,9 @@ pro plotsfms, lgnlist, explist, $
            endelse
         endfor
         cgtext, !X.CRANGE[0]+0.1, 0.9*!Y.CRANGE[1], /data, $
-                files[kk], charsize = 1, charthick = 3;, align = 1
+                names[kk], charsize = 1, charthick = 3;, align = 1
         if kk eq 0 then begin
-           legend, pos = [!X.CRANGE[0], !Y.CRANGE[0]+0.75], /data, /left, box = 0, $
+           legend, pos = [!X.CRANGE[0], !Y.CRANGE[0]+0.6], /data, /left, box = 0, $
                    ['LogNormal', 'DelayedExp'], $
                    linesty = [0,2], thick = [4,4], $
                    pspacing = 1, charsize = 1, charthick = 3
@@ -290,14 +403,18 @@ pro plotsfms, lgnlist, explist, $
                    /data, orien = atan(1./ar) * 180. / !pi, col = '770077'x
         endif else if kk eq 2 then begin
            x0 = 10.6;!X.CRANGE[1] - 0.5
-           x1 = 11.0;!X.CRANGE[1] - 0.1
+           x1 = 10.8;!X.CRANGE[1] - 0.1
            y0 = !Y.CRANGE[0] + 0.15
            y1 = !Y.CRANGE[0] + 0.25
-           polyfill, [x0,x1,x1,x0], [y0,y0,y1,y1], $
+           polyfill, [x0,x1,x1,x0], [y0,y0,y1,y1] + 0.25, $
                      /line_fill, orien = 45, thick = 1, spacing = 0.025, col = sfmscol
 ;           oplot, [x0,x1], replicate(mean([y0,y1]), 2), thick = 4, linesty = 2, col = 'ffa500'x
            cgtext, charsize = 1, charthick = 3, 'W+14 SFMS', $
-                   align = 1, x0-0.1, y0, /data
+                   align = 1, x0-0.1, y0 + 0.25, /data
+           oplot, [10.8,10.95], [-0.1,-0.1], linesty = 1, thick = 2
+           cgtext, charsize = 1, charthick = 3, '1:1 lower-env.', $
+                   9.6, -0.15, /data
+
         endif else if kk eq 3 then begin
            plotsym, 0, /fill
            legend, /bottom, /left, box = 0, $ ;pos = [!X.CRANGE[0], !Y.CRANGE[0] + 1]
@@ -450,7 +567,7 @@ pro plotsfms, lgnlist, explist, $
                      /line_fill, orien = 45, thick = 1, spacing = 0.025, col = sfmscol
 ;           oplot, [x0,x1], replicate(mean([y0,y1]), 2), thick = 4, linesty = 2, col = 'ffa500'x
            cgtext, charsize = 1, charthick = 3, 'W+14 SFMS', $
-                   align = 1, x0-0.1, y0, /data
+                   align = 1, x0-0.1, y0+0.1, /data
         endif else if kk eq 3 then begin
            plotsym, 0, /fill
            legend, /bottom, /left, box = 0, $ ;pos = [!X.CRANGE[0], !Y.CRANGE[0] + 1]
@@ -472,224 +589,10 @@ pro plotsfms, lgnlist, explist, $
   set_plot, 'X'
   !P.multi = 0
   spawn, 'gv resolvedSFMS.eps &'
-  spawn, 'gv resolvedSSFMS.eps &'
+;  spawn, 'gv resolvedSSFMS.eps &'
   
-  stop
+;  stop
   
 end
 
 ;plotsfms, 'study5_lgn_Bestfits.list', 'study5_exp_Bestfits.list', nsig = 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;; Plot the observed integrated SFMS and then that fixed to a common
-;; reference redshift
-pro plotsfmsBAD, inlist
-
-  readcol, inlist, files, f = 'A'
-  nfiles = n_elements(files)
-  
-  masses   = fltarr(nfiles)
-  emasses  = fltarr(nfiles)
-  sfrs     = fltarr(nfiles)
-  esfrs    = fltarr(nfiles)
-  sfrs_ha  = fltarr(nfiles)
-  esfrs_ha = fltarr(nfiles)
-  zs       = fltarr(nfiles)
-  ezs      = fltarr(nfiles)
-  
-  for ii = 0, nfiles - 1 do begin
-     data = mrdfits(files[ii], 1)
-     opt = where(data.REGION eq 'OPTFL')
-     data = data[opt]
-
-     masses[ii]  = data.LMASS[0]
-     emasses[ii] = 0.5 * (data.LMASS[2] - data.LMASS[1])
-     sfrs[ii]    = data.SFR[0]
-     esfrs[ii]   = 0.5 * (data.SFR[2] - data.SFR[1])
-;     sfrs_ha[ii,*] = data.HA_FLUX * 1d-18 * dluminosity(zs[ii,0], /cm)^2 * 4 *!pi / 1.26d41
-  endfor
-
-  
-  rmasses   = fltarr(nfiles, n_elements(data))
-  remasses  = fltarr(nfiles, n_elements(data))
-  rsfrs     = fltarr(nfiles, n_elements(data))
-  for ii = 0, nfiles - 1 do begin
-     data = mrdfits(files[ii], 1)
-     opt = where(data.REGION ne 'OPTFL')
-     data = data[opt]
-
-     if ii eq 0 then regions = data.REGION
-     
-     rmasses[ii,*]  = data.LMASS[0]
-     remasses[ii,*] = 0.5 * (data.LMASS[2] - data.LMASS[1])
-
-     tes = 0.5 * (data.SFR[2] - data.SFR[1])
-     ul = where(data.SFR[0] lt 2 * tes, nul, compl = meas)
-     rsfrs[ii,meas]  = data[meas].SFR[0]
-     resfrs[ii,meas] = tes[meas]
-
-     ;; Add upper limits
-     rsfrs[ii,ul] = 2 * tes[ul]
-     resfrs[ii,ul] = 2 * tes[ul]
-     
-     q = where(data.REGION eq 'INNFL')
-     zs[ii]  = data[q].Z[0]
-     ezs[ii] = 0.5 * (data[q].Z[2] - data[q].Z[1]) 
-     
-
-  endfor
-
-;  stop
-  
-;  z_common = median(zs[*,0]);
-;
-;  readcol, 'allRecons.list', files, f = 'A'
-;  nfiles = n_elements(files)
-;  cmasses  = fltarr(nfiles, 3)
-;  csfrs    = fltarr(nfiles, 3)
-;  for ii = 0, nfiles - 1 do begin
-;     data = mrdfits(files[ii], 1)
-;     hit = value_locate(data.OPTFL_REDSHIFT, z_common)
-;          
-;     cmasses[ii,*] = alog10(data.OPTFL_MGH[hit,*])
-;     csfrs[ii,*]    = data.OPTFL_SFH[hit,*]
-;  endfor
-    
-  plotsym, 0, /fill
-;  !p.multi = [0,2,0]
-  plot, masses, alog10(sfrs), /nodat, $
-        xran = [9.5,11.5], yran = [-1,2], $
-        xtitle = 'log !18M!X!D*!N [M!D'+sunsymbol()+'!N]', $
-        ytitle = 'log !18SFR!X [M!D'+sunsymbol()+'!N yr!E-1!N]', /iso
-  oploterror, masses, alog10(sfrs), $
-              emasses, $
-              1./alog(10) * esfrs/sfrs, $
-              psym = 8, col = '777777'x, errcol = '777777'x
-  cols = [255, '00a500'x, '00ff00'x, 'ff0000'x, 'ffa500'x]
-  for ii = 0, 4 do begin
-     q = where(rsfrs[*,ii] ne resfrs[*,ii], compl = ul)
-     oploterror, [rmasses[q,ii]], [alog10(rsfrs[q,ii])], $
-                 [remasses[q,ii]], 1./alog(10) * [resfrs[q,ii]/rsfrs[q,ii]], $
-                 psym = 8, col = cols[ii], errcol = cols[ii]
-;     if n_elements(ul) gt 0 then stop
-     for jj = 0, n_elements(ul) - 1 do begin
-        oplot, rmasses[ul[jj],ii] + remasses[ul[jj],ii] * [-1,1], replicate(alog10(resfrs[ul[jj],ii]), 2), $
-               col = cols[ii]
-        oplot, [rmasses[ul[jj],ii]], [alog10(resfrs[ul[jj],ii])], psym = 6, col = cols[ii]
-     endfor
-  endfor
-  for ii = 0, nfiles - 1 do $
-     oplot, rmasses[ii,*], alog10(rsfrs[ii,*])
-     
-  stop
-
-  !p.multi =[0,3,nfiles/3+1]
-  regions = ['INNFL', 'INTUP', 'INTDN', 'OUTUP', 'OUTDN', 'OPTFL']
-  cols = [255, '00ff00'x, '007700'x, 'ffa500'x, 'ff0000'x, '777777'x]
-  for ii = 0, nfiles - 1 do begin
-     data = mrdfits(files[ii], 1)     
-     qui = where(data.REGION eq 'OPTFL')
-     tsfrl = data.HA_FLUX[0] * 1d-18 * dluminosity(zs[ii,0], /cm)^2 * 4 *!pi / 1.26d41
-     tssfrl = alog10(tsfrl) - data.LMASS[0]
-     plot, [data[qui].LMASS[0]], alog10([data[qui].SFR[0]]) - data[qui].LMASS, $
-;           xran = minmax(data.LMASS), yran = alog10(minmax(data.SFR[0]/10.^data.LMASS[0])), $
-;           xran = minmax(data.LMASS), yran = minmax(tssfrl), $
-           xran = [9,11.5], yran = [-12,-8.5], $
-           xtitle = 'log !18M!X!D*!N [M!D'+sunsymbol()+'!N]', $
-           ytitle = 'log !18sSFR!X [yr!E-1!N]', $
-           /nodat
-     for jj = 0, n_elements(regions) - 1 do begin
-        qui = where(data.REGION eq REGIONS[JJ])
-        tdata = data[qui]
-        mass = tdata.LMASS[0]
-        sfr = tdata.SFR[0]
-        ssfr    = alog10(sfr) - mass
-        mass_err = 0.5 * (tdata.LMASS[2] - tdata.LMASS[1])
-        sfr_err  = 0.5/alog(10) * (tdata.SFR[2] - tdata.SFR[1])/tdata.SFR[0]
-        ssfr_err = sqrt(mass_err^2 + sfr_err^2)
-        hasfr = tdata.HA_FLUX * 1d-18 * dluminosity(zs[ii,0], /cm)^2 * 4 *!pi / 1.26d41
-        hasfr_err = 0.5/alog(10) * (hasfr[2] - hasfr[1]) / hasfr[0]
-        hassfr_err = sqrt(hasfr_err^2 + mass_err^2)
-        hassfr = alog10(hasfr) - mass        
-        oploterror, [mass], [hassfr], mass_err, hassfr_err, $
-                    psym = 8, col = cols[jj], errcol = cols[jj]
-        oplot, [mass], [ssfr], psym = 8, symsize = 1.3
-        oploterror, [mass], [ssfr], mass_err, ssfr_err, $
-                    psym = 8, col = cols[jj], errcol = cols[jj]
-        legend, /bottom, /right, box = 0, $
-                repstr(files[ii], '_lgn_bestfit.fits', ''), $
-                charsize = 1
-     endfor
-  endfor
-
-;  sfrs    = fltarr(n_elements(regions), nfiles, 3)
-;  sfrs_Ha = fltarr(n_elements(regions), nfiles, 3)
-;  for ii = 0, nfiles - 1 do begin
-;
-;     data = mrdfits(files[ii], 1)     
-;     for jj = 0, n_elements(regions) - 1 do begin
-;        tdata = data[where(data.REGION eq regions[jj])]
-;        sfrs[jj,ii,*] = tdata.SFR
-;        sfrs_Ha[jj,ii,*] = tdata.HA_FLUX * 1d-18 * dluminosity(zs[ii,0], /cm)^2 * 4 *!pi / 1.26d41
-;     endfor
-;     
-;  endfor
-;
-;  !p.multi = 0
-;  
-;  plot, alog10(sfrs), alog10(sfrs_Ha), $
-;        /iso, /nodat, xran = [-4,4], yran = [-4,4], /xsty, /ysty
-;  one_one
-;  for jj = 0, n_elements(regions) - 1 do $
-;     oploterror, alog10(sfrs[jj,*,0]), alog10(sfrs_ha[jj,*,0]), $
-;                 0.5/alog(10) * (sfrs[jj,*,2] - sfrs[jj,*,1])/sfrs[jj,*,0], $
-;                 0.5/alog(10) * (sfrs_ha[jj,*,2] - sfrs_ha[jj,*,1])/sfrs_Ha[jj,*,0], $
-;                 col = cols[jj], errcol = cols[jj], psym = 8
-  
-;  oploterror, masses[*,0], alog10(sfrs_ha[*,0]), $
-;              0.5 * (masses[*,2] - masses[*,1]), $
-;              0.5/alog(10) * (sfrs_ha[*,2] - sfrs_ha[*,1])/sfrs_ha[*,0], $
-;              psym = 8, col = '0000ff'x, errcol = '0000ff'x
-
-  
-  
-  stop
-  
-end
-;plotsfms, 'allLgnBestfits.list'
-;plotsfms, 'study3_lgn_Bestfits.list'
-;plotsfms, 'study5_lgn_Bestfits.list'
