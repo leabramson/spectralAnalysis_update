@@ -1,0 +1,5 @@
+pro readredshift0416
+
+  dir = 
+  
+# ID_zcat   ID_GLASSv001   RA    DEC   redshift  redshift_quality  ID_CLASH_zcat  CLASH_z  CLASH_Q  z_diff

@@ -1,0 +1,93 @@
+pro translateKuang, fitsIn, fitsOut
+
+  d1 = mrdfits(fitsIn, 1)
+  tags = tag_names(d1)
+  tags_to_keep = ['Z_A',$
+                  'Z_M1', $
+                  'Z_CHI_A', $
+                  'Z_L68', $
+                  'Z_U68', $
+                  'Z_L95', $
+                  'Z_U95', $
+                  'Z_L99', $
+                  'Z_U99', $
+                  'Z_NFILT', $
+                  'ALPHA_J2000', $
+                  'DELTA_J2000', $
+                  'NUMBER', $
+                  'F435W_MAG_AUTO', $
+                  'F606W_MAG_AUTO', $
+                  'F814W_MAG_AUTO', $
+                  'F105W_MAG_AUTO', $
+                  'F125W_MAG_AUTO', $
+                  'F140W_MAG_AUTO', $
+                  'F160W_MAG_AUTO', $
+                  'F435W_FLUX_RADIUS', $
+                  'F606W_FLUX_RADIUS', $
+                  'F814W_FLUX_RADIUS', $
+                  'F105W_FLUX_RADIUS', $
+                  'F125W_FLUX_RADIUS', $
+                  'F140W_FLUX_RADIUS', $
+                  'F160W_FLUX_RADIUS']
+
+  d2 = {KUANG_PZ_A        : 0., $
+        KUANG_PZ_M1       : 0., $
+        KUANG_PZ_CHI_A    : 0., $
+        KUANG_PZ_L68      : 0., $
+        KUANG_PZ_U68      : 0., $
+        KUANG_PZ_L95      : 0., $
+        KUANG_PZ_U95      : 0., $
+        KUANG_PZ_L99      : 0., $
+        KUANG_PZ_U99      : 0., $
+        KUANG_PZ_NFILT    : 0,  $
+        KF435W_MAG_AUTO   : 0., $
+        KF606W_MAG_AUTO   : 0., $
+        KF814W_MAG_AUTO   : 0., $
+        KF105W_MAG_AUTO   : 0., $
+        KF125W_MAG_AUTO   : 0., $
+        KF140W_MAG_AUTO   : 0., $
+        KF160W_MAG_AUTO   : 0., $
+        KF435W_FLUX_RADIUS: 0., $
+        KF606W_FLUX_RADIUS: 0., $
+        KF814W_FLUX_RADIUS: 0., $
+        KF105W_FLUX_RADIUS: 0., $
+        KF125W_FLUX_RADIUS: 0., $
+        KF140W_FLUX_RADIUS: 0., $
+        KF160W_FLUX_RADIUS: 0., $
+        RA                : 0.d, $
+        DEC               : 0.d, $
+        KUANG_ID          : 0L}
+  d2 = replicate(d2, n_elements(d1))
+
+  d2.KUANG_PZ_A         = d1.Z_A     
+  d2.KUANG_PZ_M1        = d1.Z_M1    
+  d2.KUANG_PZ_CHI_A     = d1.Z_CHI_A 
+  d2.KUANG_PZ_L68       = d1.Z_L68    
+  d2.KUANG_PZ_U68       = d1.Z_U68   
+  d2.KUANG_PZ_L95       = d1.Z_L95   
+  d2.KUANG_PZ_U95       = d1.Z_U95   
+  d2.KUANG_PZ_L99       = d1.Z_L99   
+  d2.KUANG_PZ_U99       = d1.Z_U99
+  d2.KUANG_PZ_NFILT     = d1.Z_NFILT
+  d2.KF435W_MAG_AUTO    = d1.
+  d2.KF606W_MAG_AUTO    = d1.
+  d2.KF814W_MAG_AUTO    = d1.
+  d2.KF105W_MAG_AUTO    = d1.
+  d2.KF125W_MAG_AUTO    = d1.
+  d2.KF140W_MAG_AUTO    = d1.
+  d2.KF160W_MAG_AUTO    = d1.
+  d2.KF435W_FLUX_RADIUS = d1.
+  d2.KF606W_FLUX_RADIUS = d1.
+  d2.KF814W_FLUX_RADIUS = d1.
+  d2.KF105W_FLUX_RADIUS = d1.
+  d2.KF125W_FLUX_RADIUS = d1.
+  d2.KF140W_FLUX_RADIUS = d1.
+  d2.KF160W_FLUX_RADIUS = d1.
+  d2.RA                 = d1.ALPHA_J2000
+  d2.DEC                = d1.DELTA_J2000
+  d2.KUANG_ID           = d1.NUMBER
+  
+  mwrfits, d2, fitsOut, /create  
+  
+end
+;translateKuang, 'KUANG_PZS/CTRS/hst_macs0717_hffclash_psfmatch_60mas_photoz.fits', 'M0717_Kuang_photoz.fits'

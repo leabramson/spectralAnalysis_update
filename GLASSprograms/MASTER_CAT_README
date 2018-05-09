@@ -1,0 +1,215 @@
+This document explains what the GLASS Master Catalog is, what it contains,
+and provides a brief description of how to use it.
+
+The GLASS Master Catalog is a compilation of available 
+data and measurements pertaining to the sources in the GLASS official data
+release found on MAST (https://archive.stsci.edu/prepds/glass/).
+
+It is provided as a FITS binary table with keys corresponding to values
+for individual galaxies.
+
+It is "pegged" entirely to the GLASS official release, meaning that
+if a source is not in a
+
+   hlsp_glass_hst_wfc3_XXXX-fullfov-pa999_ir_v001_glassmaster.cat
+
+file it is not in a Master FITS table.
+
+For sources found therein, the Master Catalog contains:
+
+    "Original Data"
+    - All measurements provided in the original SEXTRACTOR output files
+    - Any GiG (e.g., contamination) metrics provided in the files also
+      found on MAST
+    - Any GLASS redshift information (from GiGz or ground-based followup)
+      from the files also found on MAST
+
+    "Affixed Data"
+    - GALFIT structural parameters (Morishita+16; m < 26)
+    - FAST SED-based parameters (Morishita+16)
+    - EAZY photo-z information and photometry from Morishita+16
+    - EAZY photo-z information and photometry using the Roman's method ()
+
+While many of the "affixed" catalogs (photo-zs, etc.) are far larger than
+the "original" catalog, not all sources in the original release have entries
+in all affixed catalogs.
+
+All such "null values" are set to -99.
+
+The tables contain the following column keys:
+
+    NUMBER ................ Official GLASS ID number
+    X_IMAGE ............... X location on alignment image      (pix)
+    Y_IMAGE ............... Y location on alignment image      (pix)
+    X_WORLD ............... *** Official GLASS RA  ***         (dec. deg)
+    Y_WORLD ............... *** Official GLASS DEC ***         (dec. deg)
+    A_IMAGE ............... Sextractor-defined semi-major axis (pix)
+    B_IMAGE ............... Sextractor-defined semi-minor axis (pix)
+    THETA_IMAGE ........... Sextractor-defined PA              (deg FROM?)
+    A_WORLD ............... Sextractor-defined semi-major axis (dec. deg)
+    B_WORLD ............... Sextractor-defined semi-minor axis (dec. deg)
+    THETA_WORLD ........... Sextractor-defined PA              (deg; -1 * THETA_IMAGE)
+    FLUX_APER ............. Flux in alignment image            (e-/s?; XXX" aperture)
+    FLUX_APER2 ............ Flux in alignment image            (e-/s?; YYY" aperture)
+    FLUX_APER3 ............ Flux in alignment image            (e-/s?; ZZZ" aperture)
+    FLUXERR_APER .......... Flux_error in alignment image      (e-/s?; XXX" aperture)
+    FLUXERR_APER2 ......... Flux_error in alignment image      (e-/s?; YYY" aperture)
+    FLUXERR_APER3 ......... Flux_error in alignment image      (e-/s?; ZZZ" aperture)
+    MAG_APER .............. Mag in alignment image             (e-/s?; XXX" aperture)
+    MAG_APER2 ............. Mag in alignment image             (e-/s?; YYY" aperture)
+    MAG_APER3 ............. Mag in alignment image             (e-/s?; ZZZ" aperture)
+    MAGERR_APER ........... Mag_error in alignment image       (e-/s?; XXX" aperture)
+    MAGERR_APER2 .......... Mag_error in alignment image       (e-/s?; YYY" aperture)
+    MAGERR_APER3 .......... Mag_error in alignment image       (e-/s?; ZZZ" aperture)
+    FLUX_AUTO ............. Flux in alignment image            (e-/s?; Kron aperture)
+    FLUXERR_AUTO .......... Flux_error in alignment image      (e-/s?; Kron aperture)
+    MAG_AUTO .............. Mag in alignment image             (e-/s?; Kron aperture)
+    MAGERR_AUTO ........... Mag_error in alignment image       (e-/s?; Kron aperture)
+    KRON_RADIUS ........... Kron aperture radius               (pix)
+    PETRO_RADIUS .......... Petrosian aperture radius          (pix)
+    BACKGROUND ............ Background value @ X,Y obj         (e-/s/pix?)
+    THRESHOLD ............. ?
+    XWIN_IMAGE ............ Window-filt'd. X loc on align im.  (pix)
+    YWIN_IMAGE ............ Window-filt'd. Y loc on align im.  (pix)
+    AWIN_IMAGE ............ '' semi-maj. axis on align im.     (pix)
+    BWIN_IMAGE ............ '' semi-min. axis on align im.     (pix)
+    THETAWIN_IMAGE ........ '' pos-angle on align im.          (deg FROM?)
+    MU_THRESHOLD .......... ?
+    FLAGS ................. Sextractor flags
+    FWHM_IMAGE ............ Sextractor FWHM assuming gauss.    (pix)
+    FLUX_RADIUS ........... Sextractor half-light rad.         (pix)
+    FLUX_RADIUS2 .......... Sextractor 90%-light rad.          (pix)
+    CLASS_STAR ............ Sextractor stellar class. prob.    
+    X_FLT ................. Filtered X-pos on align im. ?      (pix)
+    Y_FLT ................. Filtered Y-pos on align im. ?      (pix)
+
+    RA .................... *** Official GLASS RA  ***         (dec. deg)
+    DEC ................... *** Official GLASS DEC ***         (dec. deg)
+    PA1 ................... Angle of PA1 	       	       (deg.)
+    PA2 ................... Angle of PA2		       (deg.)
+    CLASH_ID .............. CLASH catalog ID of src
+    CLASH_DPOS ............ Offset from CLASH location         (dec. deg.)
+    MAG_SELECT ............ Same as MAG_AUTO  		       (mag)
+    E_MAG_SELECT .......... Same as MAGERR_AUTO		       (mag)
+    CONTAM_G102_PA1 ....... Contamination rating, G102, PA1	      
+    CONTAM_G102_PA2 ....... Contamination rating, G102, PA2	      
+    DEFECT_G102_PA1 ....... Defect rating, G102, PA1	      
+    DEFECT_G102_PA2 ....... Defect rating, G102, PA2	      
+    CONDEF_G102_PA1 ....... Contamination defect rating, G102, PA1
+    CONDEF_G102_PA2 ....... Contamination defect rating, G102, PA2
+    CONTAM_G141_PA1 ....... Contamination rating, G141, PA1	      
+    CONTAM_G141_PA2 ....... Contamination rating, G141, PA2	      
+    DEFECT_G141_PA1 ....... Defect rating, G141, PA1	      
+    DEFECT_G141_PA2 ....... Defect rating, G141, PA2	      
+    CONDEF_G141_PA1 ....... Contamination defect rating, G141, PA1
+    CONDEF_G141_PA2 ....... Contamination defect rating, G141, PA2
+
+    Z_GLASS ............... *** Official GLASS redshift ***
+    Z_GLASS_QUAL .......... *** Official GLASS redshift quality ***
+    Z_GLASS_MULTI_SOL ..... *** Official GLASS redshift multi-valued flag ***
+
+    ID_TM ................. ID in M16 catalog
+    X_GALFIT .............. X pos., HFF F160W im., from galfit (pix)
+    Y_GALFIT .............. Y pos., HFF F160W im., from galfit (pix)
+    MAG_GALFIT ............ Galfit F160W magnitude 	       (mag)
+    RE_GALFIT ............. Galfit F160W half-light rad.       (pix)	     
+    NSERSIC_GALFIT ........ Galfit F160W Sersic index          (pix)	     
+    AXISRAT_GALFIT ........ Galfit F160W axis ratio            (pix)	     
+    PA_GALFIT ............. Galfit F160W PA	  	       (deg)	     
+    BKG_GALFIT ............ Galfit F160W background 	       (POST ICL?; e-/s?)
+    CHI2_NU_GALFIT ........ Galfit chi^2 / deg. of freedom
+    EX_GALFIT ............. Error, Galfit HFF F160W X-loc      (pix)
+    EY_GALFIT ............. Error, Galfit HFF F160W Y-loc      (pix)
+    EMAG_GALFIT ........... Error, Galfit F160W magnitude      (mag)
+    ERE_GALFIT ............ Error, Galfit F160W half-light rad.(pix)	     
+    ENSERSIC_GALFIT ....... Error, Galfit F160W Sersic index   (pix)	     
+    EAXISRAT_GALFIT ....... Error, Galfit F160W axis ratio     (pix)	     
+    EPA_GALFIT  ........... Error, Galfit F160W PA	       (deg)	     
+    N_NEIGHBORS  .......... N simultaneous fit obj             (N_NEIGHBORS + 1)
+    TM_Z_SPEC  ............ Spectroscopic redshift used in M16
+    TM_EZ_Z_A  ............ M16 EAZY Z_A value
+    TM_EZ_Z_M1  ........... M16 EAZY Z_M1 value
+    TM_EZ_CHI_A  .......... M16 EAZY chi2 for Z_A
+    TM_EZ_Z_P ............. M16 EAZY Z_P (?) value
+    TM_EZ_CHI_P ........... M16 EAZY chi2 for Z_P
+    TM_EZ_Z_M2 ............ M16 EAZY Z_M2 value
+    TM_EZ_ODDS ............ M16 EAZY odds value
+    TM_EZ_L68 ............. M16 EAZY lower 68% conf. Z value   (WHICH?!)
+    TM_EZ_U68 ............. M16 EAZY upper 68% conf. Z value   (WHICH?!)
+    TM_EZ_L95 ............. M16 EAZY lower 95% conf. Z value   (WHICH?!)
+    TM_EZ_U95 ............. M16 EAZY upper 95% conf. Z value   (WHICH?!)
+    TM_EZ_L99 ............. M16 EAZY lower 99% conf. Z value   (WHICH?!)
+    TM_EZ_U99 ............. M16 EAZY upper 99% conf. Z value   (WHICH?!)
+    TM_EZ_NFILT  .......... M16 N_FILTERS used for Photo-z
+    TM_EZ_Q_Z  ............ M16 photo z quality flag?!
+    TM_EZ_Z_PEAK  ......... M16 EAZY Z_PEAK value
+    TM_EZ_PEAK_PROB ....... M16 EAZY Z_PEAK value probability  ?
+    TM_EZ_Z_MC  ........... M16 EAZY Z_MC value
+    TM_F435 ............... M16 SCALED F435W flux              (microjansky?)
+    TM_E435 ............... M16 SCALED F435W flux error        (microjansky?)
+    TM_F606 ............... M16 SCALED F606W flux              (microjansky?)
+    TM_E606 ............... M16 SCALED F606W flux error        (microjansky?)
+    TM_F814 ............... M16 SCALED F814W flux              (microjansky?)
+    TM_E814 ............... M16 SCALED F814W flux error        (microjansky?)
+    TM_F105 ............... M16 SCALED F105W flux              (microjansky?)
+    TM_E105 ............... M16 SCALED F105W flux error        (microjansky?)
+    TM_F125 ............... M16 SCALED F125W flux              (microjansky?)
+    TM_E125 ............... M16 SCALED F125W flux error        (microjansky?)
+    TM_F140 ............... M16 SCALED F140W flux              (microjansky?)
+    TM_E140 ............... M16 SCALED F140W flux error        (microjansky?)
+    TM_F160 ............... M16 SCALED F160W flux              (microjansky?)
+    TM_E160 ............... M16 SCALED F160W flux error        (microjansky?)
+    TM_Z_USED ............. M16 Z ACTUALLY USED (z_best)
+    TM_FAST_LTAU .......... M16 FAST log TAU		       (log Yr)
+    TM_FAST_LTAU_L68 ...... M16 FAST lower 68% conf. log TAU   (log Yr)
+    TM_FAST_LTAU_U68 ...... M16 FAST upper 68% conf. log TAU   (log Yr)
+    TM_FAST_METAL ......... M16 FAST metallicity	       (Z_sun)
+    TM_FAST_METAL_L68 ..... M16 FAST lower 68% conf. metal.    (Z_sun)
+    TM_FAST_METAL_U68 ..... M16 FAST upper 68% conf. metal.    (Z_sun)
+    TM_FAST_LAGE .......... M16 FAST log AGE		       (log Yr)
+    TM_FAST_LAGE_L68 ...... M16 FAST lower 68% conf. log AGE   (log Yr)
+    TM_FAST_LAGE_U68 ...... M16 FAST upper 68% conf. log AGE   (log Yr)
+    TM_FAST_AV ............ M16 FAST Av			       (mag)
+    TM_FAST_AV_L68 ........ M16 FAST lower 68% conf. Av        (mag)
+    TM_FAST_AV_U68 ........ M16 FAST upper 68% conf. Av        (mag)
+    TM_FAST_LMASS ......... M16 FAST log stellar mass          (log Msun)
+    TM_FAST_LMASS_L68 ..... M16 FAST lower 68% conf. log Mstel (log Yr)
+    TM_FAST_LMASS_U68 ..... M16 FAST upper 68% conf. log Mstel (log Yr)
+    TM_FAST_LSFR .......... M16 FAST log SFR                   (log Msun/yr)
+    TM_FAST_LSFR_L68 ...... M16 FAST lower 68% conf. log SFR   (log Yr)
+    TM_FAST_LSFR_U68 ...... M16 FAST upper 68% conf. log SFR   (log Yr)
+    TM_FAST_LA2T .......... M16 FAST No. E-FOLDINGS
+    TM_FAST_LA2T_L68 ...... M16 FAST lower 68% conf. e-fold    (log Yr)
+    TM_FAST_LA2T_U68 ...... M16 FAST upper 68% conf. e-fold    (log Yr)
+    TM_FAST_CHI2 .......... M16 FAST model chi^2
+    TM2GLASS_DPOS ......... M16/GLASS positional offset        (dec. deg)
+
+    ID_ROME ............... Roman Catalog ID
+    ROME_ZBEST ............ Roman EAZY best photo-z
+    ROME_ZSPEC_FLAG ....... Roman spec-z flag
+    ROME_ZSPEC_ID ......... Roman spec-z src.
+    ROME_PHOTOZ_FLAG ...... Roman phot-z flag
+    ROME_F435 ............. Roman SCALED F435W flux            (microjansky?)
+    ROME_F606 ............. Roman SCALED F606W flux            (microjansky?)
+    ROME_F814 ............. Roman SCALED F814W flux            (microjansky?)
+    ROME_F105 ............. Roman SCALED F105W flux            (microjansky?)
+    ROME_F125 ............. Roman SCALED F125W flux            (microjansky?)
+    ROME_F140 ............. Roman SCALED F140W flux            (microjansky?)		     
+    ROME_F160 ............. Roman SCALED F160W flux            (microjansky?)
+    ROME_KS ............... Roman HAWK-I ?  Ks flux            (microjansky?)		     
+    ROME_F36 .............. Roman Spitzer 3.6 mic flux         (microjansky?)
+    ROME_F45 .............. Roman Spitzer 4.5 mic flux         (microjansky?)
+    ROME_E435 ............. Roman SCALED F435W flux error      (microjansky?)
+    ROME_E606 ............. Roman SCALED F606W flux error      (microjansky?)
+    ROME_E814 ............. Roman SCALED F814W flux error      (microjansky?)
+    ROME_E105 ............. Roman SCALED F105W flux error      (microjansky?)
+    ROME_E125 ............. Roman SCALED F125W flux error      (microjansky?)
+    ROME_E140 ............. Roman SCALED F140W flux error      (microjansky?)
+    ROME_E160 ............. Roman SCALED F160W flux error      (microjansky?)
+    ROME_EKS  ............. Roman HAWK-I ?  Ks flux error      (microjansky?)
+    ROME_E36  ............. Roman Spitzer 3.6 mic flux error   (microjansky?)
+    ROME_E45  ............. Roman Spitzer 4.5 mic flux error   (microjansky?)
+    ROMAN2GLASS_DPOS ...... Roman/GLASS positional offset      (dec. deg)
+
+    POINTING .............. Specific field of view; field name + "CLS", "PR1", or "PR2" 
+

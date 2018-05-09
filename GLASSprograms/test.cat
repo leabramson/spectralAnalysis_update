@@ -1,0 +1,11 @@
+#   1 NUMBER                 Running object number                                     
+#   2 MAG_ISO                Isophotal magnitude                                        [mag]
+#   3 MAG_AUTO               Kron-like elliptical aperture magnitude                    [mag]
+#   4 X_IMAGE                Object position along x                                    [pixel]
+#   5 Y_IMAGE                Object position along y                                    [pixel]
+#   6 A_IMAGE                Profile RMS along major axis                               [pixel]
+#   7 B_IMAGE                Profile RMS along minor axis                               [pixel]
+#   8 THETA_IMAGE            Position angle (CCW/x)                                     [deg]
+#   9 FLUX_RADIUS            Fraction-of-light radii                                    [pixel]
+#  10 FWHM_IMAGE             FWHM assuming a gaussian core                              [pixel]
+         1  -6.6290  -6.6155     30.6798     31.0498     5.163     3.118 -69.49      3.677     5.25

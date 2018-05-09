@@ -1,0 +1,51 @@
+pro readtakaphotoz, incat, output
+
+  ;id z_spec z_a z_m1 chi_a z_p chi_p z_m2 odds l68 u68  l95 u95  l99 u99  nfilt q_z z_peak peak_prob z_mc
+
+  readcol, incat, $
+           id, $
+           z_spec, $
+           z_a, $
+           z_m1, $
+           chi_a, $
+           z_p, $
+           chi_p, $
+           z_m2, $
+           odds, $
+           l68, $
+           u68, $
+           l95, $
+           u95, $
+           l99, $
+           u99, $
+           nfilt, $
+           q_z, $
+           z_peak, $
+           peak_prob, $
+           z_mc, $
+           f = $
+           'L,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,', $
+           /quiet
+           
+     
+
+end

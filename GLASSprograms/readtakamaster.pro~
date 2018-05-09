@@ -1,0 +1,101 @@
+pro readtakamaster, infile, output
+
+;   1 NUMBER                 Running object number                                     
+;   2 MAG_AUTO               Kron-like elliptical aperture magnitude                    [mag]
+;   3 MAGERR_AUTO            RMS error for AUTO magnitude                               [mag]
+;   4 KRON_RADIUS            Kron apertures in units of A or B                         
+;   5 BACKGROUND             Background at centroid position                            [count]
+;   6 X_WORLD                Barycenter position along world x axis                     [deg]
+;   7 Y_WORLD                Barycenter position along world y axis                     [deg]
+;   8 X_IMAGE                Object position along x                                    [pixel]
+;   9 Y_IMAGE                Object position along y                                    [pixel]
+;  10 THETA_IMAGE            Position angle (CCW/x)                                     [deg]
+;  11 ELONGATION             A_IMAGE/B_IMAGE                                           
+;  12 A_IMAGE                Profile RMS along major axis                               [pixel]
+;  13 CLASS_STAR             S/G classifier output                                     
+;  14 FLUX_RADIUS            Fraction-of-light radii                                    [pixel]
+;  16 FLAGS                  Extraction flags                                          
+;  17 ISOAREA_IMAGE          Isophotal area above Analysis threshold                    [pixel**2]
+;  18 FLUX_AUTO              Flux within a Kron-like elliptical aperture                [count]
+;  19 FLUXERR_AUTO           RMS error for AUTO flux                                    [count]
+;  20 FLUX_APER              Flux vector within fixed circular aperture(s)              [count]
+;  23 FLUXERR_APER           RMS error vector for aperture flux(es)                     [count]
+;  26 FLUX_ISO               Isophotal flux                                             [count]
+;  27 FLUXERR_ISO            RMS error for isophotal flux                               [count]
+
+  readcol, infile, $
+           NUMBER       , $
+           MAG_AUTO     , $     
+           MAGERR_AUTO  , $
+           KRON_RADIUS  , $
+           BACKGROUND   , $
+           X_WORLD      , $
+           Y_WORLD      , $
+           X_IMAGE      , $
+           Y_IMAGE      , $
+           THETA_IMAGE  , $
+           ELONGATION   , $
+           A_IMAGE      , $
+           CLASS_STAR   , $
+           FLUX_RADIUS  , $
+           FLAGS        , $
+           ISOAREA_IMAGE, $
+           FLUX_AUTO    , $
+           FLUXERR_AUTO , $
+           FLUX_APER1   , $
+           FLUX_APER2   , $
+           FLUX_APER3   , $
+           FLUXERR_APER1, $                      
+           FLUXERR_APER2, $
+           FLUXERR_APER3, $
+           FLUX_ISO     , $
+           FLUXERR_ISO  , $
+           f = $
+           'L,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'D,'+$
+           'D,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,'+$
+           'F,',$
+           /silent
+           
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+end

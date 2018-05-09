@@ -1,0 +1,12 @@
+NUMBER                   #Running object number                                    
+MAG_ISO                  #Isophotal magnitude                                       [mag]
+MAG_AUTO                 #Kron-like elliptical aperture magnitude                   [mag]
+X_IMAGE                  #Object position along x                                   [pixel]
+Y_IMAGE                  #Object position along y                                   [pixel]
+XPEAK_IMAGE                  #Object position along x                                   [pixel]
+YPEAK_IMAGE                  #Object position along y                                   [pixel]
+A_IMAGE
+B_IMAGE
+THETA_IMAGE
+FLUX_RADIUS
+FWHM_IMAGE               #FWHM assuming a gaussian core                             [pixel]

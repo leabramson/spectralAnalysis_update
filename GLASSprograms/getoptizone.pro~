@@ -1,0 +1,6 @@
+function getoptizone, infits, clineX, clineY
+
+  
+  
+  RETURN, optiZone
+end

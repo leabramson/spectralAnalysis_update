@@ -1,0 +1,94 @@
+;; Extract sources in a given redshfit range from the Glass "master"
+;; FITS tables
+
+function doContam, infits, $
+                   BOTHPA = bothPA, $
+                   CLEVEL = clevel
+  
+  if NOT bothPA then $
+     keep = where((infits.CONTAM_G102_PA1 le clevel $
+                   AND infits.CONTAM_G141_PA1 le clevel) $
+                  OR $
+                  (infits.CONTAM_G102_PA2 le clevel $
+                   AND infits.CONTAM_G141_PA2 le clevel), nuse) $ ;; Take is as long as 1 good PA
+  else $
+     keep = where((infits.CONTAM_G102_PA1 le clevel $
+                   AND infits.CONTAM_G141_PA1 le clevel) $
+                  AND $
+                  (infits.CONTAM_G102_PA2 le clevel $
+                   AND infits.CONTAM_G141_PA2 le clevel), nuse) ;; Take it only if 2 good PAs
+  
+  outfits = infits[keep]
+  
+  RETURN, outfits
+end
+
+;;
+;;
+;;
+
+pro cutOnZ, infits, $
+            ZMIN     = zmin, $
+            ZMAX     = zmax, $
+            PHOTOZ   = photoz, $
+            DOCONTAM = docontam, $
+            BOTHPA   = bothPa, $
+            CLEVEL   = clevel, $
+            OUTPUT   = output
+  
+  if NOT keyword_set(ZMIN) then zmin = 0.3
+  if NOT keyword_set(ZMIN) then zmax = 0.7
+  if NOT keyword_set(PHOTOZ) then photoz = 0 else photoz = 1
+  if NOT keyword_set(DOCONTAM) then docontam = 0 else docontam = 1
+  if docontam then begin
+     if NOT keyword_set(CLEVEL) then clevel = 1.5
+     if NOT keyword_set(BOTHPA) then bothPA = 0 else bothPA = 1
+  endif
+  
+;  readcol, fileList, files, f = 'A'
+;  nfiles = n_elements(files)
+
+  fields = []
+  ids    = []
+  ras    = []
+  decs   = []
+  zs     = []
+  zqs    = []
+  mags   = []
+  
+  d = mrdfits(infits, 1, /silent)
+  
+  if NOT photoz then $
+     use = where(d.Z_GLASS ge zmin AND d.Z_GLASS lt zmax, nuse) $
+  else $
+     use = where((d.Z_GLASS ge zmin OR d.KUANG_PZ_A ge zmin) $
+                 AND (d.Z_GLASS lt zmax OR d.KUANG_PZ_A lt zmax), nuse)
+  
+  if NOT docontam then $    
+     d2 = d[use] $
+  else $
+     d2 = docontam(d[use], BOTHPA = bothPA, CLEVEL = clevel)
+  
+  fields = [fields, d2.POINTING]
+  ids    = [ids,    d2.NUMBER]
+  ras    = [ras,    d2.X_WORLD]
+  decs   = [decs,   d2.Y_WORLD]
+  zs     = [zs,     d2.Z_GLASS]
+  zqs    = [zqs,    d2.Z_GLASS_QUAL]
+  mags   = [mags,   d2.MAG_AUTO]
+  
+  nToPrint = n_elements(ids)
+  
+  close, 1
+  openw, 1, output, width = 128
+  printf, 1, '#FIELD GLASS_ID RA DEC Z ZQ MAG'
+  for ii = 0, nToPrint - 1 do $
+     printf, 1, fields[ii], ids[ii], ras[ii], decs[ii], zs[ii], zqs[ii], mags[ii]
+  close, 1
+
+  print, ''
+  print, string(nToPrint, f = '(I)')+' galaxies at '+$
+         string(zmin, f = '(F4.2)')+' < z < '+$
+         string(zmax, f = '(F4.2)')+' dumped to '+output
+  
+end

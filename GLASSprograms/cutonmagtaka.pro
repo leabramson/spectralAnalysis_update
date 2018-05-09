@@ -1,0 +1,35 @@
+;; Take an input file from CUTONZ.PRO and cull via mags
+
+pro cutOnMagTaka, incat, output = output, $
+                  minmag = minmag, $
+                  maxmag = maxmag
+
+  if NOT keyword_set(minMag) then minMag = 14.
+  if NOT keyword_set(maxMag) then maxMag = 26.
+
+  readcol, incat, fields, ids, ras, decs, zs, zqs, pzs, mags, $
+           f = 'A,L,D,D,F,F,F,F'
+
+  use = where(mags ge minMag AND mags le maxMag, nuse)
+
+  close, 1
+  openw, 1, output, width = 256
+  printf, 1, '#FIELD GLASS_ID RA DEC Z ZQ TZ_PHOT MAG'
+  for ii = 0, nuse - 1 do $
+     printf, 1, fields[use[ii]], $
+             ids[use[ii]], $
+             ras[use[ii]], $
+             decs[use[ii]], $
+             zs[use[ii]], $
+             zqs[use[ii]], $
+             pzs[use[ii]], $
+             mags[use[ii]]
+  close, 1
+
+  print, ''
+  print, string(nuse, f = '(I)')+' galaxies at '+$
+         string(minMag, f = '(F4.1)')+' < m < '+$
+         string(maxMag, f = '(F4.1)')+' dumped to '+output
+  print, ''
+
+end

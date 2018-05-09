@@ -1,0 +1,18 @@
+# This file describes how to create a GLASS "master" catalog.
+
+ - A "master" catalog is (as of 20150528) a combination of all of the
+   items listed on the HST MAST website and Kuang's photozs. The programs
+   used to create one are:
+   
+   readglasslist.pro -- Converts Kasper's ASCII GLASS source
+   		     	lists to a FITS binary
+   readgig.pro 	     -- Converts Kasper's ASCII GiG files to FITS binary format
+   readredshift.pro  -- Converts Kasper's ASCII glass GiGz files
+   		        to FITS tables. **DOES NOT WORK FOR MACS1149**
+   translatekuang.pro - culls Kuangs HUGE FITS tables to more useable
+   		      	sizes. Inclues all 7 band photmoetry plus
+			photoZs and errors.
+   join2cats.pro     -- Joins 2 of the above catalogs (FITS tables), stripping
+   		     	repeat tags and forcing them to the length/order
+			of the GLASS source lists.
+   

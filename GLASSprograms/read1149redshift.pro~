@@ -1,0 +1,9 @@
+;; reads the redshift list (many sources) for MACS1149 supplied by
+;; the GLASS MAST HST archive cite. File is the "master" redshift file
+;; "hlsp_glass_hst-vlt-keck_wfc3-muse-deimos_macs1149_optical-ir_v001_redshiftcatalog.txt" not the one pre-crossmatched by Kasper.
+
+pro read1149redshift, outfits
+
+  
+  
+end
